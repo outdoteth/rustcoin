@@ -1,8 +1,10 @@
 //Stack types
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum stack_types {
-	byte(u8),			//Instruction
-	bytes256([u8; 32]),	//256 bit Values (e.g. result of a sha256 hash)
+	byte(u8),			//OP_CODE
+	bytes2([u8; 2]),
+	bytes4([u8; 4]),		
+	bytes32([u8; 32]),	//256 bit Values (e.g. result of a sha256 hash)
 }
 
 use self::stack_types::byte;

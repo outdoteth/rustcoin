@@ -8,6 +8,8 @@ sha2 = "*"
 vm = { path = "core/rvm" }
 blocks = { path = "blocks" }
 transactions = { path = "core/transactions" }
+db = { path = "db" }
+consensus = { path = "consensus" }
 
 [workspace]
 members = [

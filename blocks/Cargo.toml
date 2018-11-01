@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["Tancredi <dylanphoon@gmail.com>"]
 
 [dependencies]
+transactions = {path = "../core/transactions"}
+vm = {path = "../core/rvm"}
 
 [lib]
 name = "blocks"

@@ -1,12 +1,13 @@
 extern crate vm;
+extern crate db;
 
 use vm::VM;
-use vm::instructions::{*, stack_types, stack_types::*};
+use vm::instructions::{*, stack_types::*};
 
 fn main() {
-	let pkey: [u8; 32] = [1; 32];
-	let bytecode: Vec<stack_types> = vec![PUSH, byte(0x01), PUSH, bytes256(pkey), PUSH, byte(0x04)];
-	let s = VM::new(bytecode);
-	s.execute();     
+	let mut s: Vec<u8> = Vec::new();
+	s.push(0x0);
+	s.push(0x01);
+	println!("{:?}", s);
 }
 

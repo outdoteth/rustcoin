@@ -22,6 +22,8 @@ name = "blockchain"
 version = "0.1.0"
 dependencies = [
  "blocks 0.1.0",
+ "consensus 0.1.0",
+ "db 0.1.0",
  "sha2 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "transactions 0.1.0",
  "vm 0.1.0",
@@ -30,6 +32,10 @@ dependencies = [
 [[package]]
 name = "blocks"
 version = "0.1.0"
+dependencies = [
+ "transactions 0.1.0",
+ "vm 0.1.0",
+]
 
 [[package]]
 name = "byte-tools"
@@ -40,6 +46,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "byteorder"
 version = "1.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "consensus"
+version = "0.1.0"
+dependencies = [
+ "blocks 0.1.0",
+ "vm 0.1.0",
+]
 
 [[package]]
 name = "db"

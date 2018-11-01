@@ -4,7 +4,9 @@ version = "0.1.0"
 authors = ["Tancredi <dylanphoon@gmail.com>"]
 
 [dependencies]
+vm = {path = "../core/rvm"}
+blocks = {path = "../blocks"}
 
 [lib]
-name = "lib.rs"
+path = "lib.rs"
 name = "consensus"
