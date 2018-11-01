@@ -1,3 +1,10 @@
+//TODO: Need to change push opcode so that different amounts can be pushed onto the stack.
+//e.g. push32, push2, push1
+
+extern crate vm;
+
+use vm::instructions::{*, stack_types::*};
+
 pub struct Transaction {
 	inputs: Input,
 	outputs: UTXO
@@ -10,18 +17,19 @@ struct UTXO {
 }
 
 struct Input {
-	tx_hash: u32, //Refers to utxo
-	from_pub_key: u32,
-	signature: u32,
-	unlockScript: Vec<u8> //PUSH <signature> PUSH <from_pub_key>
+	tx_hash: stack_types, //Refers to utxo
+	index: stack_types,
+	from_pub_key: stack_types,
+	signature: stack_types,
+	unlockScript: stack_types //PUSH <signature> PUSH <from_pub_key>
 }
 
 //PUSH <to>
 //PUSH <amount>
 //PUSH <unlock_script>									
 //PUSH <signature> PUSH <from_pub_key>  //load the sig and pub key of spender
-//PUSH <tx_hash>
-//PUSH <utxo_index> 		
+//PUSH <utxo_index> 	
+//PUSH <tx_hash>	
 //GET_UTXO								//okay now we have the utxo saved in memory
 //START
 //DUP HASH160 							//get hash of inputed pubkey
@@ -35,8 +43,44 @@ impl Transaction {
 
 	}
 
-	fn serialize_input(&self) -> Vec<u8> {
-		vec![]
+	fn serialize_input(input: Input) -> Result<Vec<u8>, String> {
+		let mut sinput: Vec<u8> = Vec::new();
+		sinput.push(0x03); //PUSH -- WONT WORK
+		if let bytes32(i) = input.signature {
+			for s in 0..i.len() {
+				sinput.push(i[s]); //Push the signature on the stack
+			}
+		} else {
+			return Err(String::from("Error serializing transaction: `singature` invalid"));
+		}
+		sinput.push(0x03); //PUSH -- WONT WORK
+		if let bytes32(i) = input.from_pub_key {
+			for s in 0..i.len() {
+				sinput.push(i[s]); //Push the from_pub_key onto the stack
+			}
+		} else {
+			return Err(String::from("Error serializing transaction: `from_pub_key` invalid"));
+		}
+		sinput.push(0x03); //PUSH -- WONT WORK SEE TOP
+		if let bytes2(i) = input.index {
+			for s in 0..i.len() {
+				sinput.push(i[s]); //Push the output index inside the utxo to be spent on the stack
+			}
+		} else {
+			return Err(String::from("Error serializing transaction: `index` invalid"));
+		}
+		sinput.push(0x03); //PUSH -- WONT WORK
+		if let bytes32(i) = input.tx_hash {
+			for s in 0..i.len() {
+				sinput.push(i[s]); //Push the tx_hash onto the stack
+			}
+		} else {
+			return Err(String::from("Error serializing transaction: `tx_hash` invalid"));
+		}
+		sinput.push(GET_UTXO.unwrap());
+
+
+		return Ok(sinput);
 	}
 
 	fn serialize_output(&self) -> Vec<u8> {

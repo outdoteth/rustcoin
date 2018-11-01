@@ -9,6 +9,19 @@ pub enum stack_types {
 
 use self::stack_types::byte;
 
+pub trait ByteUnwrap {
+	fn unwrap(&self) -> u8;
+}
+
+impl ByteUnwrap for stack_types {
+	fn unwrap(&self) -> u8 {
+		match &self {
+			byte(i) => *i,
+			_ => {panic!("{:?}", "Invalid `OP_CODE` passed into `unwrap()`");},
+		}
+	}
+}
+
 //OP_CODES
 pub const START: stack_types = byte(0x01); 			//Start of unlock script
 pub const END: stack_types = byte(0x02);   			//End of UTXO lock script && therefore end of script - if 1 is on the stack mark UTXO as spent and create new utxos

@@ -103,6 +103,9 @@ dependencies = [
 [[package]]
 name = "transactions"
 version = "0.1.0"
+dependencies = [
+ "vm 0.1.0",
+]
 
 [[package]]
 name = "typenum"
