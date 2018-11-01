@@ -1,0 +1,10 @@
+[package]
+name = "transactions"
+version = "0.1.0"
+authors = ["levi"]
+
+[dependencies]
+
+[lib]
+name = "transactions"
+path = "lib.rs"

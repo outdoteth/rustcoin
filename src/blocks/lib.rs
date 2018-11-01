@@ -1,4 +1,4 @@
-pub mod transactions;
+/*extern crate transactions;
 use self::transactions::{Transaction};
 
 pub struct Block {
@@ -7,4 +7,4 @@ pub struct Block {
 
 pub struct History {
 	TX_HISTORY: Vec<Transaction>
-}
+}*/

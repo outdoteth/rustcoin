@@ -1,4 +1,4 @@
-mod vm;
+extern crate vm;
 
 use vm::VM;
 use vm::instructions::{*, stack_types, stack_types::*};

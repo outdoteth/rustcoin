@@ -1,5 +1,4 @@
 pub mod instructions;
-pub mod blocks;
 use self::instructions::{*};
 
 pub struct VM {

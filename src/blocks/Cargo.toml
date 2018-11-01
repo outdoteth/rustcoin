@@ -1,0 +1,10 @@
+[package]
+name = "blocks"
+version = "0.1.0"
+authors = ["levi"]
+
+[dependencies]
+
+[lib]
+name = "blocks"
+path = "lib.rs"
