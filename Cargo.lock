@@ -42,7 +42,7 @@ version = "1.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "core"
+name = "db"
 version = "0.1.0"
 
 [[package]]

@@ -1,10 +1,11 @@
 [package]
-name = "blocks"
+name = "db"
 version = "0.1.0"
 authors = ["Tancredi <dylanphoon@gmail.com>"]
 
 [dependencies]
 
+
 [lib]
-name = "blocks"
 path = "lib.rs"
+name = "db"
