@@ -5,6 +5,17 @@ authors = ["levi"]
 
 [dependencies]
 sha2 = "*"
-vm = { path = "src/core/src/vm" }
-blocks = { path = "src/blocks" }
-transactions = { path = "src/core/src/transactions" }
+vm = { path = "core/src/vm" }
+blocks = { path = "blocks" }
+transactions = { path = "core/src/transactions" }
+
+[workspace]
+members = [
+	"core",
+	"blocks",
+	"rustcoin"
+]
+
+[[bin]]
+path = "rustcoin/main.rs"
+name = "rustcoind"
