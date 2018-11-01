@@ -53,7 +53,7 @@ impl Transaction {
 		} else {
 			return Err(String::from("Error serializing transaction: `singature` invalid"));
 		}
-		sinput.push(0x03); //PUSH -- WONT WORK
+		sinput.push(PUSH.unwrap()); //PUSH -- WONT WORK
 		if let bytes32(i) = input.from_pub_key {
 			for s in 0..i.len() {
 				sinput.push(i[s]); //Push the from_pub_key onto the stack
@@ -61,7 +61,7 @@ impl Transaction {
 		} else {
 			return Err(String::from("Error serializing transaction: `from_pub_key` invalid"));
 		}
-		sinput.push(0x03); //PUSH -- WONT WORK SEE TOP
+		sinput.push(PUSH.unwrap()); //PUSH -- WONT WORK SEE TOP
 		if let bytes2(i) = input.index {
 			for s in 0..i.len() {
 				sinput.push(i[s]); //Push the output index inside the utxo to be spent on the stack
@@ -78,6 +78,7 @@ impl Transaction {
 			return Err(String::from("Error serializing transaction: `tx_hash` invalid"));
 		}
 		sinput.push(GET_UTXO.unwrap());
+
 
 
 		return Ok(sinput);
