@@ -21,8 +21,15 @@ dependencies = [
 name = "blockchain"
 version = "0.1.0"
 dependencies = [
+ "blocks 0.1.0",
  "sha2 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "transactions 0.1.0",
+ "vm 0.1.0",
 ]
+
+[[package]]
+name = "blocks"
+version = "0.1.0"
 
 [[package]]
 name = "byte-tools"
@@ -72,9 +79,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "transactions"
+version = "0.1.0"
+
+[[package]]
 name = "typenum"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "vm"
+version = "0.1.0"
 
 [metadata]
 "checksum block-buffer 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "49665c62e0e700857531fa5d3763e91b539ff1abeebd56808d378b495870d60d"

@@ -5,3 +5,6 @@ authors = ["levi"]
 
 [dependencies]
 sha2 = "*"
+vm = { path = "src/core/src/vm" }
+blocks = { path = "src/blocks" }
+transactions = { path = "src/core/src/transactions" }
