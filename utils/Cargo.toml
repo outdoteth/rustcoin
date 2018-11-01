@@ -1,0 +1,11 @@
+[package]
+name = "utils"
+version = "0.1.0"
+authors = ["Tancredi <dylanphoon@gmail.com>"]
+
+[dependencies]
+blocks = {path = "../blocks"}
+
+[lib]
+name = "utils"
+path = "lib.rs"

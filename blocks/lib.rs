@@ -12,7 +12,6 @@ pub struct Block {
 }
 
 
-//TODO change stack types to include u16 and u32
 struct BlockHeader {
 	version: stack_types,			//2 byte
 	prev_block_hash: stack_types,	//32 byte

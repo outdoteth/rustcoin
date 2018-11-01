@@ -10,6 +10,7 @@ blocks = { path = "blocks" }
 transactions = { path = "core/transactions" }
 db = { path = "db" }
 consensus = { path = "consensus" }
+utils = {path = "utils"}
 
 [workspace]
 members = [

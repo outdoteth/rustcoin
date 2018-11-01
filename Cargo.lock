@@ -26,6 +26,7 @@ dependencies = [
  "db 0.1.0",
  "sha2 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "transactions 0.1.0",
+ "utils 0.1.0",
  "vm 0.1.0",
 ]
 
@@ -111,6 +112,13 @@ dependencies = [
 name = "typenum"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "utils"
+version = "0.1.0"
+dependencies = [
+ "blocks 0.1.0",
+]
 
 [[package]]
 name = "vm"
