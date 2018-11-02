@@ -9,14 +9,8 @@ use vm::instructions::{*, stack_types::*};
 use transactions::*;
 
 fn main() {
-	let testx = Input {
-			tx_hash: bytes32([0; 32]), //Refers to utxo
-			index: bytes2([0; 2]),
-			from_pub_key: bytes32([0; 32]),
-			signature: bytes32([0; 32]),
-			unlockScript: bytes32([0; 32])
-		};
-	let s = Transaction::serialize_input(testx);
-	println!("{:?}", s);
+	let x = vec![6; 15];
+	let mut s: [u8; 10] = [0; 10];
+	println!("{:?}", &x[0..2] == [6,6] );
 }
 

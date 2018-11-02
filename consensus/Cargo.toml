@@ -6,6 +6,7 @@ authors = ["Tancredi <dylanphoon@gmail.com>"]
 [dependencies]
 vm = {path = "../core/rvm"}
 blocks = {path = "../blocks"}
+utils = {path = "../utils"}
 
 [lib]
 path = "lib.rs"
