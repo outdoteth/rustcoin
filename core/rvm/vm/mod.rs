@@ -1,6 +1,7 @@
 pub mod instructions;
 use instructions::*;
 
+#[derive(Debug)]
 pub struct VM {
 	sc: u32, //Stack pointer -- Program pointer can be omitted since non-turing complete
 	STACK: Vec<u8>,
@@ -20,50 +21,59 @@ impl VM {
 
 	//Runs the bytecode of the tx
 	pub fn execute(mut self) -> Result<VM, String> {
-		let mut i: usize = 0;
 		let mut STACK = self.STACK;
-		let BINARY_STORE = self.BINARY_STORE;
 
-		//loop through the BINARY_STORE and run the program
-		while i < BINARY_STORE.len() {
-			match BINARY_STORE[i] {
+		//loop through the BINARY_STORE and run the block
+		if let Err(i) = ::vm::VM::run_bytecode(self.BINARY_STORE.clone(), &mut STACK) {
+			return Err(i);
+		}
+
+		println!("{:?}", STACK);
+		self.STACK = STACK;
+		return Ok(self);
+	}
+
+	fn run_bytecode(bytecode: Vec<u8>, STACK: &mut Vec<u8>) -> Result<bool, String> {
+		let mut i: usize = 0;
+		while i < bytecode.len() {
+			match bytecode[i] {
 				START => {
 
 				},
 				PUSH1 => {
 					i+=1;
-					if BINARY_STORE.len() < i {
+					if bytecode.len() < i {
 						return Err(format!("VM Error: PUSH1 stack overflow at position {}", i-1));
 					}
-					STACK.push(BINARY_STORE[i].clone());
+					STACK.push(bytecode[i].clone());
 				},
 				PUSH2 => {
 					i+=1;
-					if BINARY_STORE.len() < i+1 {
+					if bytecode.len() < i+1 {
 						return Err(format!("VM Error: PUSH2 stack overflow at position {}", i-1));
 					}
 					for s in 0..2 {
-						STACK.push(BINARY_STORE[i+s].clone());
+						STACK.push(bytecode[i+s].clone());
 					}
 					i+=1;
 				},
 				PUSH4 => {
 					i+=1;
-					if BINARY_STORE.len() < i+3 {
+					if bytecode.len() < i+3 {
 						return Err(format!("VM Error: PUSH4 stack overflow at position {}", i-1));
 					}
 					for s in 0..4 {
-						STACK.push(BINARY_STORE[i+s].clone());
+						STACK.push(bytecode[i+s].clone());
 					}
 					i+=3;
 				},
 				PUSH32 => {
 					i+=1;
-					if BINARY_STORE.len() < i+31 {
+					if bytecode.len() < i+31 {
 						return Err(format!("VM Error: PUSH32 stack overflow at position {}", i-1));
 					}
 					for s in 0..32 {
-						STACK.push(BINARY_STORE[i+s].clone());
+						STACK.push(bytecode[i+s].clone());
 					}
 					i+=31;
 				}
@@ -72,20 +82,19 @@ impl VM {
 					let tx_hash = STACK.pop();
 					let tx_index = STACK.pop();
 					//Now we need to search for the tx_hash, the tx_index in the found tx_hash,
-					//And then append the lockScript to the BINARY_STORE
+					//And then append the lockScript to the bytecode
 					//If it doesnt exist return error
 				},
 				DUP_HASH160 => {},
 				EQUAL_VERIFY => {},
 				CHECKSIG => {},
 				END => {},
-				_ => {}
+				_ => {
+					return Err(format!("VM ERROR: Invalid OP_CODE at position {}", i));
+				}
 			}
 			i+=1;
 		}
-		println!("{:?}", STACK);
-		self.BINARY_STORE = BINARY_STORE;
-		self.STACK = STACK;
-		return Ok(self);
+		return Ok(true);
 	}
 }

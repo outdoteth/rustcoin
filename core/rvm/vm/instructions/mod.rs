@@ -1,5 +1,3 @@
-
-
 //OP_CODES
 pub const START: u8 = 0x01; 			//Start of unlock script
 pub const END: u8 = 0x02;   			//End of UTXO lock script && therefore end of script - if 1 is on the stack mark UTXO as spent and create new utxos
