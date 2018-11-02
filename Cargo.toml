@@ -5,6 +5,7 @@ authors = ["levi"]
 
 [dependencies]
 sha2 = "*"
+rkv = "*"
 vm = { path = "core/rvm" }
 blocks = { path = "blocks" }
 transactions = { path = "core/transactions" }

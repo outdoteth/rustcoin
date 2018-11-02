@@ -24,10 +24,14 @@ impl VM {
 		let mut STACK = self.STACK;
 
 		//loop through the BINARY_STORE and run the block
+		//get return value and run through bytecode again
+		//return value = pc counter
+		//means we have to pass in pc counter again
+		//program_counter+pc each time loop comes through
 		let mut program_counter: usize = 0;
 		let is_lock_script = false;
 		while program_counter != self.BINARY_STORE.len() {
-			let vm_res = ::vm::VM::run_bytecode(self.BINARY_STORE.clone(), &mut STACK, program_counter, is_lock_script);
+			let vm_res = ::vm::VM::run_bytecode(self.BINARY_STORE[program_counter..].to_vec(), &mut STACK, program_counter, is_lock_script);
 			match vm_res {
 				Ok(i) => {
 					program_counter = i;
@@ -39,17 +43,14 @@ impl VM {
 		}
 		println!("{:?}", program_counter);
 
-		//get return value and run through bytecode again
-		//return value = pc counter
-		//means we have to pass in pc counter again
-		//program_counter+pc each time loop comes through
 		self.STACK = STACK;
 		return Ok(self);
 	}
 
 	//Takes in bytecode for a tx and runs it
 	//If the given bytecode is not a lockScript, 
-	//increment the counter and return the program counter within the block
+	//increment the counter with current bytecode position
+	//and return the program counter within the block
 	fn run_bytecode(bytecode: Vec<u8>, STACK: &mut Vec<u8>, pc: usize, lockScript: bool) -> Result<usize, String> {
 		let mut i: usize = 0;
 		while i < bytecode.len() {
@@ -62,7 +63,7 @@ impl VM {
 					if bytecode.len() < i {
 						return Err(format!("VM Error: PUSH1 stack overflow at position {}", i-1));
 					}
-					STACK.push(bytecode[i].clone());
+					STACK.push(bytecode[i]);
 				},
 				PUSH2 => {
 					i+=1;
@@ -70,7 +71,7 @@ impl VM {
 						return Err(format!("VM Error: PUSH2 stack overflow at position {}", i-1));
 					}
 					for s in 0..2 {
-						STACK.push(bytecode[i+s].clone());
+						STACK.push(bytecode[i+s]);
 					}
 					i+=1;
 				},
@@ -80,7 +81,7 @@ impl VM {
 						return Err(format!("VM Error: PUSH4 stack overflow at position {}", i-1));
 					}
 					for s in 0..4 {
-						STACK.push(bytecode[i+s].clone());
+						STACK.push(bytecode[i+s]);
 					}
 					i+=3;
 				},
@@ -90,7 +91,7 @@ impl VM {
 						return Err(format!("VM Error: PUSH32 stack overflow at position {}", i-1));
 					}
 					for s in 0..32 {
-						STACK.push(bytecode[i+s].clone());
+						STACK.push(bytecode[i+s]);
 					}
 					i+=31;
 				}
@@ -106,7 +107,11 @@ impl VM {
 				DUP_HASH160 => {},
 				EQUAL_VERIFY => {},
 				CHECKSIG => {},
-				END => {},
+				END => {
+					//Check if utxo is loaded. if no throw error
+					//Check if stack.pop() == 1. if yes,  push into MSTORE the utxo to be deleted 
+					//and update MSTORE balance
+				},
 				_ => {
 					return Err(format!("VM ERROR: Invalid OP_CODE at position {}", i));
 				}

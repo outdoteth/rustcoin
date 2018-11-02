@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["Tancredi <dylanphoon@gmail.com>"]
 
 [dependencies]
-
+rkv = "*"
+tempfile = "*"
 
 [lib]
 path = "lib.rs"
