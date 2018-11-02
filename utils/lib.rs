@@ -1,9 +1,12 @@
 //returns a block header for mining
 extern crate chain;
+extern crate sha2;
+
+use sha2::{Sha256, Digest}; //This algo should be changed to something asic resistant
 
 pub fn get_block_template() -> [u8; 70] {
 	let version = [0,1]; //2 bytes
-	let prev_block_hash = get_last_block_hash();//need to fetch from db
+	let prev_block_hash = get_last_block_hash(); //need to fetch from db
 	let (all_tx_hash, all_tx) = collect_tx_and_hash(); //need to fetch from mempool
 	let nonce = [0,0,0,0];
 
@@ -29,5 +32,11 @@ pub fn collect_tx_and_hash() -> ([u8; 32], Vec<u8>) {
 }
 
 pub fn hash_satisfies_difficulty(block: &Vec<u8>) -> bool {
+	let mut hasher = Sha256::new();
+	hasher.input(block);
+	let result = hasher.result();
+	if result.as_slice() > [0;32] { //TODO: `[0;32]` needs to be changed to chain::CHAIN_PARAMS::DIFFICULTY
+
+	}
 	return true;
 }

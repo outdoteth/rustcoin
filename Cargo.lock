@@ -125,6 +125,7 @@ version = "0.1.0"
 dependencies = [
  "blocks 0.1.0",
  "chain 0.1.0",
+ "sha2 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
