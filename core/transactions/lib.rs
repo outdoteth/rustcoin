@@ -36,7 +36,7 @@ pub struct Input {
 //EQUAL_VERIFY 							//load the utxo from memory and check pubkey hash matches; throw error if false
 //CHECKSIG								//Check the signature of the inputed pubkey matches the signature provided; throw error if false
 //END									//end check if stack == 1
-										//if yes pop 1 and create new utxo w/ unlock script, amount and to and delete utso stored in memory
+										//if yes unwind the stack and create new utxo(s) w/ unlock script, amount and to and delete utxo(s) stored in memory
 
 impl Transaction {
 	pub fn serialize(&self) {

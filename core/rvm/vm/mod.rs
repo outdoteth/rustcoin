@@ -67,11 +67,13 @@ impl VM {
 					}
 					i+=31;
 				}
+				//This is where verification of ownership of the utxo is handled
 				GET_UTXO => {
 					let tx_hash = STACK.pop();
-					//TODO: Add tx index as well
-
-
+					let tx_index = STACK.pop();
+					//Now we need to search for the tx_hash, the tx_index in the found tx_hash,
+					//And then append the lockScript to the BINARY_STORE
+					//If it doesnt exist return error
 				},
 				DUP_HASH160 => {},
 				EQUAL_VERIFY => {},
