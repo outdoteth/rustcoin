@@ -1,4 +1,6 @@
 //returns a block header for mining
+extern crate chain;
+
 pub fn get_block_template() -> [u8; 70] {
 	let version = [0,1]; //2 bytes
 	let prev_block_hash = get_last_block_hash();//need to fetch from db
@@ -24,4 +26,8 @@ pub fn get_last_block_hash() -> [u8; 32] {
 //gets transactions from the mempool along with their collective hash
 pub fn collect_tx_and_hash() -> ([u8; 32], Vec<u8>) {
 	([0; 32], Vec::new())
+}
+
+pub fn hash_satisfies_difficulty(block: &Vec<u8>) -> bool {
+	return true;
 }

@@ -5,6 +5,7 @@ authors = ["Tancredi <dylanphoon@gmail.com>"]
 
 [dependencies]
 blocks = {path = "../blocks"}
+chain = {path = "../chain"}
 
 [lib]
 name = "utils"

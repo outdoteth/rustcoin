@@ -16,7 +16,7 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 		return Err(String::from("ERROR: VERIFY BLOCK: Incompatable `version`"));
 	}
 
-	if !hash_satisfies_difficulty(&block) {
+	if !utils::hash_satisfies_difficulty(&block) {
 		return Err(String::from("ERROR: VERIFY BLOCK: Invalid `nonce`"));
 	}
 
@@ -26,10 +26,6 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 	}
 
 	return Ok(true);
-}
-
-fn hash_satisfies_difficulty(block: &Vec<u8>) -> bool {
-	return true;
 }
 
 /*

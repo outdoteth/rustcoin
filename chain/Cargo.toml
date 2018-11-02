@@ -1,0 +1,10 @@
+[package]
+name = "chain"
+version = "0.1.0"
+authors = ["Tancredi <dylanphoon@gmail.com>"]
+
+[dependencies]
+
+[lib]
+name = "chain"
+path = "lib.rs"
