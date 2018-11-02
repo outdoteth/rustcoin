@@ -19,21 +19,38 @@ impl VM {
 		}
 	}
 
-	//Runs the bytecode of the tx
+	//Runs the bytecode of the block
 	pub fn execute(mut self) -> Result<VM, String> {
 		let mut STACK = self.STACK;
 
 		//loop through the BINARY_STORE and run the block
-		if let Err(i) = ::vm::VM::run_bytecode(self.BINARY_STORE.clone(), &mut STACK) {
-			return Err(i);
+		let mut program_counter: usize = 0;
+		let is_lock_script = false;
+		while program_counter != self.BINARY_STORE.len() {
+			let vm_res = ::vm::VM::run_bytecode(self.BINARY_STORE.clone(), &mut STACK, program_counter, is_lock_script);
+			match vm_res {
+				Ok(i) => {
+					program_counter = i;
+				},
+				Err(i) => {
+					return Err(i);
+				}
+			}
 		}
+		println!("{:?}", program_counter);
 
-		println!("{:?}", STACK);
+		//get return value and run through bytecode again
+		//return value = pc counter
+		//means we have to pass in pc counter again
+		//program_counter+pc each time loop comes through
 		self.STACK = STACK;
 		return Ok(self);
 	}
 
-	fn run_bytecode(bytecode: Vec<u8>, STACK: &mut Vec<u8>) -> Result<bool, String> {
+	//Takes in bytecode for a tx and runs it
+	//If the given bytecode is not a lockScript, 
+	//increment the counter and return the program counter within the block
+	fn run_bytecode(bytecode: Vec<u8>, STACK: &mut Vec<u8>, pc: usize, lockScript: bool) -> Result<usize, String> {
 		let mut i: usize = 0;
 		while i < bytecode.len() {
 			match bytecode[i] {
@@ -79,11 +96,12 @@ impl VM {
 				}
 				//This is where verification of ownership of the utxo is handled
 				GET_UTXO => {
-					let tx_hash = STACK.pop();
-					let tx_index = STACK.pop();
+					//let tx_hash = STACK.pop();
+					//let tx_index = STACK.pop();
 					//Now we need to search for the tx_hash, the tx_index in the found tx_hash,
 					//And then append the lockScript to the bytecode
 					//If it doesnt exist return error
+					::vm::VM::run_bytecode([PUSH1, 9].to_vec(), STACK, i, true); //recursive call to run bytecode of lockScript
 				},
 				DUP_HASH160 => {},
 				EQUAL_VERIFY => {},
@@ -95,6 +113,13 @@ impl VM {
 			}
 			i+=1;
 		}
-		return Ok(true);
+
+		let mut local_program_counter: usize = 0;
+		if lockScript {
+			local_program_counter = pc;
+		} else {
+			local_program_counter = pc+i;
+		}
+		return Ok(local_program_counter);
 	}
 }
