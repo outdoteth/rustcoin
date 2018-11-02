@@ -1,4 +1,5 @@
 pub mod instructions;
+use instructions::*;
 
 pub struct VM {
 	sc: u32, //Stack pointer -- Program pointer can be omitted since non-turing complete
@@ -18,7 +19,7 @@ impl VM {
 	}
 
 	//Runs the bytecode of the tx
-	pub fn execute(mut self) -> VM {
+	pub fn execute(mut self) -> Result<VM, String> {
 		let mut i: usize = 0;
 		let mut STACK = self.STACK;
 		let BINARY_STORE = self.BINARY_STORE;
@@ -29,10 +30,43 @@ impl VM {
 				START => {
 
 				},
-				PUSH => {
+				PUSH1 => {
 					i+=1;
+					if BINARY_STORE.len() < i {
+						return Err(format!("VM Error: PUSH1 stack overflow at position {}", i-1));
+					}
 					STACK.push(BINARY_STORE[i].clone());
 				},
+				PUSH2 => {
+					i+=1;
+					if BINARY_STORE.len() < i+1 {
+						return Err(format!("VM Error: PUSH2 stack overflow at position {}", i-1));
+					}
+					for s in 0..2 {
+						STACK.push(BINARY_STORE[i+s].clone());
+					}
+					i+=1;
+				},
+				PUSH4 => {
+					i+=1;
+					if BINARY_STORE.len() < i+3 {
+						return Err(format!("VM Error: PUSH4 stack overflow at position {}", i-1));
+					}
+					for s in 0..4 {
+						STACK.push(BINARY_STORE[i+s].clone());
+					}
+					i+=3;
+				},
+				PUSH32 => {
+					i+=1;
+					if BINARY_STORE.len() < i+31 {
+						return Err(format!("VM Error: PUSH32 stack overflow at position {}", i-1));
+					}
+					for s in 0..32 {
+						STACK.push(BINARY_STORE[i+s].clone());
+					}
+					i+=31;
+				}
 				GET_UTXO => {
 					let tx_hash = STACK.pop();
 					//TODO: Add tx index as well
@@ -50,6 +84,6 @@ impl VM {
 		println!("{:?}", STACK);
 		self.BINARY_STORE = BINARY_STORE;
 		self.STACK = STACK;
-		return self;
+		return Ok(self);
 	}
 }

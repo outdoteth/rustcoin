@@ -3,7 +3,7 @@
  
 extern crate vm;
 
-use vm::instructions::{*, stack_types::*};
+use vm::instructions::{*};
 
 pub struct Transaction {
 	inputs: Input,
@@ -11,17 +11,17 @@ pub struct Transaction {
 }
 
 pub struct UTXO {
-	owner_pub_key_hash: u32,
-	amount: u32,
+	owner_pub_key_hash: [u8; 32],
+	amount: [u8; 4],
 	lockScript: Vec<u8> //DUP HASH160 EQUAL_VERIFY CHECKSIG
 }
 
 pub struct Input {
-	pub tx_hash: stack_types, //Refers to utxo
-	pub index: stack_types,
-	pub from_pub_key: stack_types,
-	pub signature: stack_types,
-	pub unlockScript: stack_types //PUSH <signature> PUSH <from_pub_key>
+	pub tx_hash: [u8; 32], //Refers to utxo
+	pub index: [u8; 2],
+	pub from_pub_key: [u8; 32],
+	pub signature: [u8; 32],
+	pub unlockScript: [u8; 32] //PUSH <signature> PUSH <from_pub_key>
 }
 
 //PUSH <to>
@@ -43,46 +43,53 @@ impl Transaction {
 
 	}
 
-	pub fn serialize_input(input: Input) -> Result<Vec<u8>, String> {
+	pub fn serialize_tx(TX: Transaction) -> Result<Vec<u8>, String> {
 		let mut sinput: Vec<u8> = Vec::new();
 
-		sinput.push(0x03); //PUSH -- WONT WORK
-		if let bytes32(i) = input.signature {
-			for s in 0..i.len() {
-				sinput.push(i[s]); //Push the signature on the stack
-			}
-		} else {
-			return Err(String::from("Error serializing transaction: `singature` invalid"));
+		let input = TX.inputs;
+		let output = TX.outputs;
+
+		//PUSH32 <to>
+		sinput.push(PUSH32);
+		for i in 0..output.owner_pub_key_hash.len() {
+			sinput.push(output.owner_pub_key_hash[i]);
 		}
 
-		sinput.push(PUSH); //PUSH -- WONT WORK
-		if let bytes32(i) = input.from_pub_key {
-			for s in 0..i.len() {
-				sinput.push(i[s]); //Push the from_pub_key onto the stack
-			}
-		} else {
-			return Err(String::from("Error serializing transaction: `from_pub_key` invalid"));
+		//PUSH4 <amount>
+		sinput.push(PUSH4);
+		for i in 0..output.amount.len() {
+			sinput.push(output.amount[i]);
 		}
 
-		sinput.push(PUSH); //PUSH -- WONT WORK SEE TOP
-		if let bytes2(i) = input.index {
-			for s in 0..i.len() {
-				sinput.push(i[s]); //Push the output index inside the utxo to be spent on the stack
-			}
-		} else {
-			return Err(String::from("Error serializing transaction: `index` invalid"));
+		/// --------------------- Unlock script --------------------- ///
+		//PUSH32 <signature> 
+		//---- TODO: This needs to be changed to ECDSA signature (67-70 bytes);
+		sinput.push(PUSH32);
+		for i in 0..input.signature.len() {
+			sinput.push(input.signature[i]);
 		}
 
-		sinput.push(0x03); //PUSH -- WONT WORK
-		if let bytes32(i) = input.tx_hash {
-			for s in 0..i.len() {
-				sinput.push(i[s]); //Push the tx_hash onto the stack
-			}
-		} else {
-			return Err(String::from("Error serializing transaction: `tx_hash` invalid"));
+		//PUSH32 <from>
+		sinput.push(PUSH32);
+		for i in 0..input.from_pub_key.len() {
+			sinput.push(input.from_pub_key[i]);
+		}
+		/// --------------------- Unlock script --------------------- ///
+
+		//PUSH <utxo index>
+		sinput.push(PUSH2);
+		for i in 0..input.index.len() {
+			sinput.push(input.index[i]);
 		}
 
-		sinput.push(GET_UTXO);  
+		//PUSH <utxo hash>
+		sinput.push(PUSH32);
+		for i in 0..input.tx_hash.len() {
+			sinput.push(input.tx_hash[i]);
+		}
+
+		//Get the utxo and run the given unlock script bytecode on top of the current VM (and stack)
+		sinput.push(GET_UTXO);
 
 		return Ok(sinput);
 	}

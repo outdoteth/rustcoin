@@ -2,7 +2,7 @@ extern crate transactions;
 extern crate vm;
 
 use transactions::{Transaction};
-use vm::instructions::{*, stack_types::*};
+use vm::instructions::{*};
 
 
 pub struct Block {
@@ -13,48 +13,41 @@ pub struct Block {
 
 
 struct BlockHeader {
-	version: stack_types,			//2 byte
-	prev_block_hash: stack_types,	//32 byte
-	all_tx_hash: stack_types,		//32 byte
-	nonce: stack_types,				//4 byte
+	version: [u8; 2],			//2 byte
+	prev_block_hash: [u8; 32],	//32 byte
+	all_tx_hash: [u8; 32],		//32 byte
+	nonce: [u8; 4],				//4 byte
 }
 
 
 impl Block {
-	pub fn deserialize_block(&self, block_bytes: Vec<stack_types>) {
+
+	//Deserialize block for viewing in cli? or gui?
+	pub fn deserialize_block(&self, block_bytes: Vec<u8>) {
 
 	}
 
+	//Serialize block to be broadcast
 	pub fn serialize_block(&self) -> Result<Vec<u8>, String> {
 		let mut sblock: Vec<u8> = Vec::new();
+
+		//First serialize the block-header
+		//Version
+		//Prev block hash
+		//All tx hash
+		//Nonce
 		let blockHeader = &self.blockHeader;
-		if let bytes2(i) = blockHeader.version {
-			for s in 0..i.len() {
-				sblock.push(i[s]);
-			}
-		} else {
-			return Err(String::from("Missing `version` from `BlockHeader`"));
+		for i in 0..blockHeader.version.len() {
+			sblock.push(blockHeader.version[i]);
 		}
-		if let bytes32(i) = blockHeader.prev_block_hash {
-			for s in 0..i.len() {
-				sblock.push(i[s]);
-			}
-		} else {
-			return Err(String::from("Missing `prev_block_hash` from `BlockHeader`"));
+		for i in 0..blockHeader.prev_block_hash.len() {
+			sblock.push(blockHeader.prev_block_hash[i]);
 		}
-		if let bytes32(i) = blockHeader.all_tx_hash {
-			for s in 0..i.len() {
-				sblock.push(i[s]);
-			}
-		} else {
-			return Err(String::from("Missing `all_tx_hash` from `BlockHeader`"));
+		for i in 0..blockHeader.all_tx_hash.len() {
+			sblock.push(blockHeader.all_tx_hash[i]);
 		}
-		if let bytes4(i) = blockHeader.nonce {
-			for s in 0..i.len() {
-				sblock.push(i[s]);
-			}
-		} else {
-			return Err(String::from("Missing `nonce` from `BlockHeader`"));
+		for i in 0..blockHeader.nonce.len() {
+			sblock.push(blockHeader.nonce[i]);
 		}
 		return Ok(sblock);
 	}

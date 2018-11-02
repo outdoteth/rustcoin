@@ -6,7 +6,7 @@ extern crate vm;
 extern crate blocks;
 extern crate utils;
 
-use vm::instructions::{*, stack_types::*};
+use vm::instructions::{*};
 
 ///Verify new blocks that come in and write to db
 pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
@@ -39,6 +39,7 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 
 	//Verify all tx
 	let n_vm = vm::VM::new(all_tx_bytecode.clone());
+	n_vm.execute();
 
 	//Insert coinbase tx into utxo set
 

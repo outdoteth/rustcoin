@@ -1,32 +1,13 @@
-//Stack types
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub enum stack_types {
-	byte(u8),			//OP_CODE
-	bytes2([u8; 2]),
-	bytes4([u8; 4]),		
-	bytes32([u8; 32]),	//256 bit Values (e.g. result of a sha256 hash)
-}
 
-use self::stack_types::byte;
-
-pub trait ByteUnwrap {
-	fn unwrap(&self) -> u8;
-}
-
-impl ByteUnwrap for stack_types {
-	fn unwrap(&self) -> u8 {
-		match &self {
-			byte(i) => *i,
-			_ => {panic!("{:?}", "Invalid `OP_CODE` passed into `unwrap()`");},
-		}
-	}
-}
 
 //OP_CODES
 pub const START: u8 = 0x01; 			//Start of unlock script
 pub const END: u8 = 0x02;   			//End of UTXO lock script && therefore end of script - if 1 is on the stack mark UTXO as spent and create new utxos
-pub const PUSH: u8 = 0x03;	 		//PUSH item onto the stack
-pub const GET_UTXO: u8 = 0x04;		//Get the utxo and save it in MSTORE memory
-pub const DUP_HASH160: u8 = 0x05;	//Hash the top item on the stack and push it onto the stack
-pub const EQUAL_VERIFY: u8 = 0x06;	//Check that two hashes are equal and pop the last two elements. Terminate if false
-pub const CHECKSIG: u8 = 0x07;		//Verify that the top pubkey on the stack matches the second top signature on the stack then pop both and push 1
+pub const GET_UTXO: u8 = 0x03;		//Get the utxo and save it in MSTORE memory
+pub const DUP_HASH160: u8 = 0x04;	//Hash the top item on the stack and push it onto the stack
+pub const EQUAL_VERIFY: u8 = 0x05;	//Check that two hashes are equal and pop the last two elements. Terminate if false
+pub const CHECKSIG: u8 = 0x06;		//Verify that the top pubkey on the stack matches the second top signature on the stack then pop both and push 1
+pub const PUSH1: u8 = 0x07;	 		//PUSH 1 byte
+pub const PUSH2: u8 = 0x08;			//PUSH 2 bytes
+pub const PUSH4: u8 = 0x09;			//PUSH 4 bytes
+pub const PUSH32: u8 = 0x0a;	 	//PUSH 32 bytes

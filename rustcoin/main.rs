@@ -9,14 +9,15 @@ extern crate sha2;
 use sha2::{Sha256, Digest};
 
 use vm::VM;
-use vm::instructions::{*, stack_types::*};
+use vm::instructions::{*};
 
 use transactions::*;
 
 fn main() {
-	let mut hasher = Sha256::new();
-	hasher.input([6;8]);
-	let result = hasher.result();
-	println!("{:?}", [10;32] < [255;32]);
+	let v = VM::new([PUSH1, 1, PUSH4, 1].to_vec());
+	let x = v.execute();
+	if let Err(s) = x {
+		println!("{:?}", s);
+	}
 }
 
