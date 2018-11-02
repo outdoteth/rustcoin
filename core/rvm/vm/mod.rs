@@ -1,15 +1,14 @@
 pub mod instructions;
-use self::instructions::{*};
 
 pub struct VM {
 	sc: u32, //Stack pointer -- Program pointer can be omitted since non-turing complete
-	STACK: Vec<stack_types>,
-	BINARY_STORE: Vec<stack_types>, //Store for the bytecode
-	MSTORE: Vec<stack_types>
+	STACK: Vec<u8>,
+	BINARY_STORE: Vec<u8>, //Store for the bytecode
+	MSTORE: Vec<u8>
 }
 
 impl VM {
-	pub fn new(bytecode: Vec<stack_types>) -> VM {
+	pub fn new(bytecode: Vec<u8>) -> VM {
 		Self {
 			sc: 0,
 			STACK: Vec::new(),

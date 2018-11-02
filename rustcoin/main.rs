@@ -17,6 +17,6 @@ fn main() {
 	let mut hasher = Sha256::new();
 	hasher.input([6;8]);
 	let result = hasher.result();
-	println!("{:?}", result.as_slice() < &[255;32]);
+	println!("{:?}", [10;32] < [255;32]);
 }
 
