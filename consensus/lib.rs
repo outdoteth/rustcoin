@@ -2,6 +2,8 @@
 // - new blocks
 // - new transactions 
 //and writes them to the blockchain db or the mempool
+//TODO -- Verify signature in transaction (line 88)
+//TODO -- need to store verified tx in memory
 extern crate vm;
 extern crate blocks;
 extern crate utils;
@@ -38,8 +40,14 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 	}
 
 	//Verify all tx
-	verify_tx(all_tx_bytes);
-
+	let mut program_counter: usize = 0;
+	let mut valid_tx_vector: Vec<Vec<u8>>  = Vec::new();
+	while program_counter != block.len() {
+		match verify_tx(all_tx_bytes[program_counter..].to_vec(), true) { 
+			Ok(i) => { program_counter = i; }, 
+			Err(e) => { return Err(e); }
+		}
+	}
 
 	return Ok(true);
 }
@@ -60,11 +68,10 @@ fn verify_coinbase(coinbase_tx: [u8; 70]) {
 //output count - 6 bytes
 //-(output count times)
 //--value - 6 bytes
-//--size of scriptPubKey 2 bytes
-//--scriptPubKey
+//--pubkey (to address) //32 bytes
 
 //todo verify the all the transactions
-fn verify_tx(all_tx_bytes: Vec<u8>) -> Result<bool, String> {
+fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<usize, String> {
 	let version = &all_tx_bytes[0..4];
 	if version != [0,0,0,1] {
 		return Err(String::from("VERIFY TX ERROR: Incompatable `version` in tx"));
@@ -78,24 +85,41 @@ fn verify_tx(all_tx_bytes: Vec<u8>) -> Result<bool, String> {
 		s+=32;
 		let utxo_index = all_tx_bytes[s];
 		s+=1;
+
+		//---------------- TODO
 		//load utxo
 		//if signature(hash(utxo)) == utxo pub key then valid
 		//if fail throw error
 		//add sum inputs
+		s+=32; //increase by 32 because of signature (in reality this will probs be 67-70 bytes)
 	}
 
 	let output_count = all_tx_bytes[s];
 	s+=1;
+	let mut sum_outputs: u64 = 0; //Amount to be spent
 	for i in 0..output_count {
-		let mut value: u32 = 0;
-		let val_arr = &all_tx_bytes[s..s+6];
+		let value_array = &all_tx_bytes[s..s+6];
 		s+=6;
-		for i in 0..val_arr.len() {
-			value = value * 16 + val_arr[i] as u32;
+		for i in 0..value_array.len() { //Get the byte array of `sum_outputs` and cast it to a u32
+			sum_outputs = sum_outputs * 16 + value_array[i] as u64;
 		}
+
+		if sum_outputs > sum_inputs {
+			return Err(String::from("Sum of outputs exceeds the inputs"));
+		}
+
+		//TODO -- Need to store each output in memory array
+		let to_pub_key = &all_tx_bytes[s..s+32];
+		s+=32; 
 	}
 
-	return Ok(true);
+	if is_Block {
+		//write utxo to LMDB
+	} else {
+		//write utxo to mempool
+	}
+
+	return Ok(s); //Return the program counter inside the block
 }
 
 
