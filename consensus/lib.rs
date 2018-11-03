@@ -7,6 +7,9 @@
 extern crate blocks;
 extern crate utils;
 extern crate rkv;
+extern crate sha2;
+
+use sha2::{Sha256, Digest};
 
 use rkv::{Manager, Rkv, Store, Value};
 use std::fs;
@@ -43,12 +46,11 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 	}
 
 	let coinbase_tx_vec = all_tx_bytes[0..32].to_vec();
-	let coinbase_tx = &all_tx_bytes[0..32];
-	let x = verify_coinbase(coinbase_tx_vec);
 
 	//Verify all tx
 	let mut program_counter: usize = 32;
 	let mut valid_tx_vector: Vec<Vec<u8>>  = Vec::new();
+	let tx_vec: Vec<Vec<u8>> = Vec::new();
 	while program_counter < all_tx_bytes.len() {
 		match verify_tx(all_tx_bytes[program_counter..].to_vec(), true) { 
 			Ok(i) => { program_counter = i; }, 
@@ -56,27 +58,39 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 		}
 	}
 
+	add_to_utxo_set();
+	add_coinbase_to_utxo_set(coinbase_tx_vec);
+	insert_block(block);
 	return Ok(true);
+}
+
+pub fn add_coinbase_to_utxo_set(coinbase_dest: Vec<u8>) {
+	let mut version: Vec<u8> = vec![0,1];
+	let mut owner: Vec<u8> = vec![0;32];
+	let mut all_tx_hash: Vec<u8> = vec![0;32];
+	let mut nonce: Vec<u8> = vec![0;4];
+	let mut coinbase_destination: Vec<u8> = vec![0;32];
+}
+
+pub fn add_to_utxo_set() {
+
 }
 
 pub fn insert_block(block: Vec<u8>) {
-	let path = Path::new("../db/store");
+	let path = Path::new("consensus/db/store");
 	let created_arc = Manager::singleton().write().unwrap().get_or_create(path, Rkv::new).unwrap();
 	let env = created_arc.read().unwrap();
 	let store: Store = env.open_or_create_default().unwrap(); 
-	
+
+	let block_hash = utils::hash(&block);
+
 	let mut writer = env.write().unwrap(); //create write tx
-	let block_hash = utils::hash_block(&block); //get the block hash
-    writer.put(&store, "Genesis", &Value::I64(678687)).unwrap();
-    writer.put(&store, "Genesis", &Value::I64(678687)).unwrap();
+    writer.put(&store, block_hash.clone(),  &Value::Blob(&block)).unwrap();
     writer.commit().unwrap();
 
     let reader = env.read().expect("reader");
-    reader.get(&store, "foo").unwrap();
-}
-
-fn verify_coinbase(coinbase_tx: Vec<u8>) -> Result<bool, String> {
-	return Ok(true);
+    println!("{:?}", block_hash.clone());
+    println!("{:?}", reader.get(&store, block_hash).unwrap());
 }
 
 ///Transaction format inside each block

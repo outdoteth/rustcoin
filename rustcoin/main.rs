@@ -1,4 +1,4 @@
-extern crate db;
+
 extern crate transactions;
 extern crate utils;
 extern crate chain;
@@ -7,11 +7,11 @@ extern crate rkv;
 
 use rkv::{Manager, Rkv, Store, Value};
 use std::fs;
+use std::path::Path;
 
 extern crate sha2;
 
 use sha2::{Sha256, Digest};
-use std::path::Path;
 
 use transactions::*;
 
@@ -20,9 +20,7 @@ fn main() {
 }
 
 fn init_chain() {
-
-
-    println!("{:?}", consensus::verify_new_block(construct_genesis()));
+	consensus::verify_new_block(construct_genesis());
 }
 
 fn construct_genesis() -> Vec<u8>{

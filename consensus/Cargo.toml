@@ -8,6 +8,7 @@ vm = {path = "../core/rvm"}
 blocks = {path = "../blocks"}
 utils = {path = "../utils"}
 rkv = "*"
+sha2 = "*"
 
 [lib]
 path = "lib.rs"

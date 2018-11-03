@@ -9,7 +9,6 @@ rkv = "*"
 vm = { path = "core/rvm" }
 blocks = { path = "blocks" }
 transactions = { path = "core/transactions" }
-db = { path = "db" }
 consensus = { path = "consensus" }
 utils = {path = "utils"}
 chain = {path = "chain"}
@@ -19,8 +18,7 @@ members = [
 	"core/transactions",
 	"core/rvm",
 	"blocks",
-	"rustcoin",
-	"db"
+	"rustcoin"
 ]
 
 [[bin]]

@@ -39,8 +39,11 @@ pub fn collect_tx_and_hash() -> ([u8; 32], Vec<u8>) {
 	([0; 32], Vec::new())
 }
 
-pub fn hash_block(block: &Vec<u8>) -> [u8;32] {
-	[1;32]
+pub fn hash(digest: &Vec<u8>) -> Vec<u8> {
+	let mut hasher = Sha256::new();
+	hasher.input(&digest);
+	let result = hasher.result();
+	return result.to_vec();
 }
 
 //Check hash is less than difficulty
