@@ -96,6 +96,7 @@ name = "consensus"
 version = "0.1.0"
 dependencies = [
  "blocks 0.1.0",
+ "rkv 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "utils 0.1.0",
  "vm 0.1.0",
 ]

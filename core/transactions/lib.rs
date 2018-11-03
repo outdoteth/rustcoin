@@ -1,9 +1,4 @@
-//TODO: Need to change push opcode so that different amounts can be pushed onto the stack.
-//e.g. push32, push2, push1
- 
-extern crate vm;
 
-use vm::instructions::{*};
 
 pub struct Transaction {
 	inputs: Input,
@@ -47,7 +42,7 @@ impl Transaction {
 
 	}
 
-	pub fn serialize_tx(TX: Transaction) -> Result<Vec<u8>, String> {
+	/*pub fn serialize_tx(TX: Transaction) -> Result<Vec<u8>, String> {
 		let mut sinput: Vec<u8> = Vec::new();
 
 		let input = TX.inputs;
@@ -96,7 +91,7 @@ impl Transaction {
 		sinput.push(GET_UTXO);
 
 		return Ok(sinput);
-	}
+	}*/
 
 	fn serialize_output(&self) -> Vec<u8> {
 		vec![]

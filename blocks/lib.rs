@@ -1,8 +1,6 @@
 extern crate transactions;
-extern crate vm;
 
 use transactions::{Transaction};
-use vm::instructions::{*};
 
 
 pub struct Block {
