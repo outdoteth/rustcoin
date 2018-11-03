@@ -1,4 +1,3 @@
-
 extern crate transactions;
 extern crate utils;
 extern crate chain;
@@ -41,10 +40,7 @@ fn construct_genesis() -> Vec<u8>{
 
 	//first tx (only coinbase)
 	block.append(&mut coinbase_destination);
-	//WHERE I LEFT OFF. 
-	//--TODO: INSERT BLOCK INTO DB
-	//--INSERT COINBASE INTO UTXO SET
-
-	add_coinbase_to_utxo_set(coinbase_tx_vec);
+	
+	insert_block(block);
 	return block;
 }

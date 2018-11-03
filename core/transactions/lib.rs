@@ -30,9 +30,9 @@ pub struct Input {
 //-
 //output count - 6 bytes
 //-(output count times)
+//--version
 //--value - 6 bytes
-//--size of scriptPubKey 2 bytes
-//--scriptPubKey
+//--owner - 32 bytes
 
 //This needs to be changed to match similar to bitcoin specs.
 //The only thing that needs to go through the VM is the unlockScript and lockScript

@@ -18,7 +18,7 @@ use std::path::Path;
 
 struct verify_tx_return_values {
 	pc: usize,
-	utxos: Vec<[u8; 34]>
+	utxos: Vec<Vec<u8>>
 }
 
 ///Verify new blocks that come in and write to db
@@ -36,7 +36,7 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 	}
 
 	//Nonce check
-	if !utils::hash_satisfies_difficulty(&block) {
+	if !utils::hash_satisfies_difficulty(&block_header.to_vec()) {
 		return Err(String::from("ERROR: VERIFY BLOCK: Invalid `nonce`"));
 	}
 
@@ -55,13 +55,15 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 
 	let coinbase_tx_vec = all_tx_bytes[0..32].to_vec();
 
-	//Verify all tx
+	//Verify all tx (excluding coinbase)
 	let mut program_counter: usize = 32;
 	let mut valid_tx_vector: Vec<Vec<u8>>  = Vec::new();
-	let tx_vec: Vec<Vec<u8>> = Vec::new();
 	while program_counter < all_tx_bytes.len() {
 		match verify_tx(all_tx_bytes[program_counter..].to_vec(), true) { 
-			Ok(i) => { program_counter = i; }, 
+			Ok(mut i) => { 
+				valid_tx_vector.append(&mut i.utxos);
+				program_counter = i.pc; 
+			}, 
 			Err(e) => { return Err(e); }
 		}
 	}
@@ -137,20 +139,18 @@ pub fn insert_block(block: Vec<u8>) {
 //--pubkey (to address) //32 bytes
 
 //todo verify the all the transactions
-fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<usize, String> {
-	let version = &all_tx_bytes[0..4];
-	if version != [0,0,0,1] { //this needs to be changed to 2 bytes
+fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_values, String> {
+	let version = &all_tx_bytes[0..2]; //needs to be changed to counter
+	if version != [0,1] { //this needs to be changed to 2 bytes
 		return Err(String::from("VERIFY TX ERROR: Incompatable `version` in tx"));
 	}
 
-	let input_count = all_tx_bytes[4];
+	let input_count = all_tx_bytes[2];
 	let mut sum_inputs: u64 = 0;
-	let mut s: usize = 4; //counter for position in bytecode of block
+	let mut s: usize = 2; //counter for position in bytecode of block
 	for i in 0..input_count {
 		let utxo_tx_hash = &all_tx_bytes[s..s+32];
 		s+=32;
-		let utxo_index = all_tx_bytes[s];
-		s+=1;
 
 		//---------------- TODO
 		//load utxo
@@ -163,6 +163,7 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<usize, String> {
 	let output_count = all_tx_bytes[s];
 	s+=1;
 	let mut sum_outputs: u64 = 0; //Amount to be spent
+	let mut utxo_vector: Vec<Vec<u8>> = Vec::new();
 	for i in 0..output_count {
 		let value_array = &all_tx_bytes[s..s+6];
 		s+=6;
@@ -176,18 +177,27 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<usize, String> {
 			return Err(String::from("Sum of outputs exceeds the inputs"));
 		}
 
-		//TODO -- Need to store each output in memory array
-		let to_pub_key = &all_tx_bytes[s..s+32];
+		let mut to_pub_key = all_tx_bytes[s..s+32].to_vec();
+		let mut raw_utxo: Vec<u8> = Vec::new();
+
+		raw_utxo.append(&mut !vec[0,1]);
+		raw_utxo.append(&mut value_array.to_vec());
+		raw_utxo.append(&mut to_pub_key);
+		utxo_vector.push(raw_utxo); //vector of utxos to be returned so that we can store in utxo set if valid
 		s+=32; 
 	}
 
-	if is_Block {
-		//write utxo to LMDB
-	} else {
+	if !is_Block {
 		//write utxo to mempool
 	}
 
-	return Ok(s); //Return the program counter inside the block
+	let result = verify_tx_return_values {
+		pc: s, 
+		utxos: utxo_vector
+	};
+
+	return Ok(result); //Return the program counter inside the block
+	//need to also return utxo vectors to delete (the utxos the input references)
 }
 
 
