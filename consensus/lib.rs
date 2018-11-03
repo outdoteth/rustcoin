@@ -32,17 +32,13 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 
 	//Verify tx_hash matches hash of all tx
 	let tx_hash = &block_header[34..66];
-	let all_tx_bytecode = block_header[70..].to_vec();
-	if tx_hash != utils::hash_tx(all_tx_bytecode.clone()) {
+	let all_tx_bytes = block_header[70..].to_vec();
+	if tx_hash != utils::hash_tx(all_tx_bytes.clone()) {
 		return Err(String::from("ERROR: VERIFY BLOCK: `tx_hash` does not match"));
 	}
 
 	//Verify all tx
-	let n_vm = vm::VM::new(all_tx_bytecode.clone());
-	n_vm.execute();
-
-	//Insert coinbase tx into utxo set
-
+	verify_tx(all_tx_bytes);
 
 
 	return Ok(true);
@@ -52,15 +48,55 @@ fn verify_coinbase(coinbase_tx: [u8; 70]) {
 
 }
 
+///Transaction format inside each block
+//version no - 4 bytes
+//input count - 1 byte
+//-(input count times)
+//--Transaction hash
+//--Output index 4 bytes
+//--unlock script size in bytes - 1 bytes
+//--unlock script 
+//-
+//output count - 6 bytes
+//-(output count times)
+//--value - 6 bytes
+//--size of scriptPubKey 2 bytes
+//--scriptPubKey
 
 //todo verify the all the transactions
-fn verify_tx() -> Result<bool, String> {
+fn verify_tx(all_tx_bytes: Vec<u8>) -> Result<bool, String> {
+	let version = &all_tx_bytes[0..4];
+	if version != [0,0,0,1] {
+		return Err(String::from("VERIFY TX ERROR: Incompatable `version` in tx"));
+	}
+
+	let input_count = all_tx_bytes[4];
+	let mut sum_inputs: u64 = 0;
+	let mut s: usize = 4; //counter for position in bytecode of block
+	for i in 0..input_count {
+		let utxo_tx_hash = &all_tx_bytes[s..s+32];
+		s+=32;
+		let utxo_index = all_tx_bytes[s];
+		s+=1;
+		//load utxo
+		//if signature(hash(utxo)) == utxo pub key then valid
+		//if fail throw error
+		//add sum inputs
+	}
+
+	let output_count = all_tx_bytes[s];
+	s+=1;
+	for i in 0..output_count {
+		let mut value: u32 = 0;
+		let val_arr = &all_tx_bytes[s..s+6];
+		s+=6;
+		for i in 0..val_arr.len() {
+			value = value * 16 + val_arr[i] as u32;
+		}
+	}
+
 	return Ok(true);
 }
 
-/*
-	version: stack_types,			//2 byte
-	prev_block_hash: stack_types,	//32 byte
-	all_tx_hash: stack_types,		//32 byte
-	nonce: stack_types,				//4 byte
-*/
+
+

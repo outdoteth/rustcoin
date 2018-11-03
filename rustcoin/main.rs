@@ -14,7 +14,6 @@ use vm::instructions::{*};
 use transactions::*;
 
 fn main() {
-	let x = VM::new([PUSH1, 1, GET_UTXO, PUSH1, 7].to_vec());
-	println!("{:?}", x.execute());
+
 }
 

@@ -24,20 +24,24 @@ pub struct Input {
 	pub unlockScript: [u8; 32] //PUSH <signature> PUSH <from_pub_key>
 }
 
-//PUSH <to>
-//PUSH <amount>
-//PUSH <unlock_script>									
-//PUSH <signature> PUSH <from_pub_key>  //load the sig and pub key of spender
-//PUSH <utxo_index> 	
-//PUSH <tx_hash>	
-//GET_UTXO								//okay now we have the utxo saved in memory
-//START
-//DUP HASH160 							//get hash of inputed pubkey
-//EQUAL_VERIFY 							//load the utxo from memory and check pubkey hash matches; throw error if false
-//CHECKSIG								//Check the signature of the inputed pubkey matches the signature provided; throw error if false
-//END									//end check if stack == 1
-										//if yes unwind the stack and create new utxo(s) w/ unlock script, amount and to and delete utxo(s) stored in memory
+///Transaction format inside each block
+//version no - 4 bytes
+//input count - 6 bytes
+//-(input count times)
+//--Transaction hash
+//--Output index 4 bytes
+//--unlock script size in bytes 2 bytes
+//--unlock script 
+//-
+//output count - 6 bytes
+//-(output count times)
+//--value - 6 bytes
+//--size of scriptPubKey 2 bytes
+//--scriptPubKey
 
+//This needs to be changed to match similar to bitcoin specs.
+//The only thing that needs to go through the VM is the unlockScript and lockScript
+//No need to overcomplicate things
 impl Transaction {
 	pub fn serialize(&self) {
 
