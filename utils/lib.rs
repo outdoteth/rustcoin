@@ -1,6 +1,11 @@
 //returns a block header for mining
 extern crate chain;
 extern crate sha2;
+extern crate rkv;
+
+use rkv::{Manager, Rkv, Store, Value};
+use std::fs;
+use std::path::Path;
 
 use sha2::{Sha256, Digest}; //This algo should be changed to something asic resistant
 
@@ -25,8 +30,19 @@ pub fn get_block_template() -> [u8; 70] {
 
 //Last block hash 
 //-- This needs access to the database
-pub fn get_prev_block_hash() -> [u8; 32] {
-	[0; 32]
+pub fn get_prev_block_hash() -> Vec<u8> {
+	let path = Path::new("./db/store");
+	let created_arc = Manager::singleton().write().unwrap().get_or_create(path, Rkv::new).unwrap();
+	let env = created_arc.read().unwrap();
+	let store: Store = env.open_or_create_default().unwrap(); 
+	let reader = env.read().expect("reader");
+	if let Some(i) = reader.get(&store, vec![1]).unwrap() {
+		match i {
+			Value::Blob(s) => {return s.to_vec();},
+			_ => {return vec![1];}
+		}
+	}
+	return vec![1];
 }
 
 pub fn hash_tx(txs: Vec<u8>) -> [u8; 32] {

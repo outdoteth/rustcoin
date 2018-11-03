@@ -20,8 +20,9 @@ fn main() {
 }
 
 fn init_chain() {
-	consensus::verify_new_block(construct_genesis());
+	construct_genesis();
 }
+
 
 fn construct_genesis() -> Vec<u8>{
 	let mut version: Vec<u8> = vec![0,1];
@@ -40,5 +41,10 @@ fn construct_genesis() -> Vec<u8>{
 
 	//first tx (only coinbase)
 	block.append(&mut coinbase_destination);
+	//WHERE I LEFT OFF. 
+	//--TODO: INSERT BLOCK INTO DB
+	//--INSERT COINBASE INTO UTXO SET
+
+	add_coinbase_to_utxo_set(coinbase_tx_vec);
 	return block;
 }
