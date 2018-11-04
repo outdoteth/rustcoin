@@ -5,7 +5,7 @@
 - Owner -- *32 bytes*
 
 ### Serialized input
-- utxo hash -- *32 bytes*
+- utxo hash -- *32 bytes* <-- this is created from Sha256([utxo, blockheader])
 - signature -- *67-70 bytes*
 
 ### Serialized transaction
