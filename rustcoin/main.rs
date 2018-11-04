@@ -15,7 +15,9 @@ use sha2::{Sha256, Digest};
 use transactions::*;
 
 fn main() {
-	init_chain();
+	//init_chain();
+	let mut s: Vec<u8> = vec![1,2,3,4];
+	println!("{:?}", s[0..1].to_vec());
 }
 
 fn init_chain() {

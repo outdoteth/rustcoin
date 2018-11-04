@@ -68,7 +68,7 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 		}
 	}
 
-	add_to_utxo_set(valid_tx_vector);
+	add_to_utxo_set(&mut valid_tx_vector, &mut block_header.to_vec());
 	add_coinbase_to_utxo_set(coinbase_tx_vec);
 	insert_block(block);
 	return Ok(true);
@@ -99,8 +99,17 @@ pub fn add_coinbase_to_utxo_set(coinbase_dest: Vec<u8>) {
 
 }
 
-pub fn add_to_utxo_set(utxo_to_add: Vec<Vec<u8>>) {
+pub fn add_to_utxo_set(utxo_to_add: &mut Vec<Vec<u8>>, block_header: &mut Vec<u8>) {
+	let mut digest: Vec<u8> = Vec::new();
+	for i in 0..utxo_to_add.len() {
+		//hash utxo + block header
+		digest.append(&mut utxo_to_add[i]);
+		digest.append(block_header);
+		utils::hash(&digest); //utxo id/utxo hash - this is what we want to write to db
 
+		
+		digest = Vec::new();
+	}
 }
 
 pub fn insert_block(block: Vec<u8>) {
@@ -112,16 +121,16 @@ pub fn insert_block(block: Vec<u8>) {
 	let block_hash = utils::hash(&block);
 
 	let mut writer = env.write().unwrap(); //create write tx
-    writer.put(&store, block_hash.clone(),  &Value::Blob(&block)).unwrap();
-    
-    //store the last block hash - key is vec![1]
-    writer.put(&store, vec![1],  &Value::Blob(&block_hash.clone())).unwrap();
-    writer.commit().unwrap();
+	writer.put(&store, block_hash.clone(),  &Value::Blob(&block)).unwrap();
 
-    let reader = env.read().expect("reader");
-    println!("BLOCK HASH = {:?}", block_hash.clone());
-    println!("BLOCK = {:?}", reader.get(&store, block_hash).unwrap());
-    println!("LAST BLOCK HASH = {:?}", reader.get(&store, vec![1]).unwrap());
+	//store the last block hash - key is vec![1]
+	writer.put(&store, vec![1],  &Value::Blob(&block_hash.clone())).unwrap();
+	writer.commit().unwrap();
+
+	let reader = env.read().expect("reader");
+	println!("BLOCK HASH = {:?}", block_hash.clone());
+	println!("BLOCK = {:?}", reader.get(&store, block_hash).unwrap());
+	println!("LAST BLOCK HASH = {:?}", reader.get(&store, vec![1]).unwrap());
 }
 
 
@@ -167,11 +176,13 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 		let utxo_owner = tx[6..38].to_vec();
 
 		//---------------- TODO
-		//load utxo
-		//if signature(hash(utxo)) == utxo pub key then valid
-		//if fail throw error
-		//add sum inputs
-		s+=32; //increase by 32 because of signature (in reality this will probs be 67-70 bytes)
+		//sig verify
+		let sig_size = all_tx_bytes[s..s+1].to_vec()[0] as usize;
+		s+=1;
+
+		//TODO: This needs to be passed into ECDSA sig verifier
+		let signature = &all_tx_bytes[s..s+sig_size];
+		s+=sig_size;
 	}
 
 	let output_count = all_tx_bytes[s];
@@ -181,8 +192,9 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 	for i in 0..output_count {
 		let value_array = &all_tx_bytes[s..s+6];
 		s+=6;
+		
 		let mut cache_sum: u64 = 0;
-		for i in 0..value_array.len() { //Get the byte array of `sum_outputs` and cast it to a u32
+		for i in 0..value_array.len() { //Get the byte array of `sum_outputs` and cast it to a u64
 			cache_sum = cache_sum * 16 + value_array[i] as u64;
 		}
 		sum_outputs += cache_sum;
