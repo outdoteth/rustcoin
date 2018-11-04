@@ -51,6 +51,7 @@ pub fn hash_tx(txs: Vec<u8>) -> [u8; 32] {
 
 //gets transactions from the mempool along with their collective hash 
 //-- This needs access to the database
+//This is used for block construction
 pub fn collect_tx_and_hash() -> ([u8; 32], Vec<u8>) {
 	([0; 32], Vec::new())
 }

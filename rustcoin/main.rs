@@ -19,7 +19,7 @@ fn main() {
 }
 
 fn init_chain() {
-	construct_genesis();
+	//construct_genesis();
 }
 
 
@@ -40,7 +40,7 @@ fn construct_genesis() -> Vec<u8>{
 
 	//first tx (only coinbase)
 	block.append(&mut coinbase_destination);
-	
-	insert_block(block);
+
+	consensus::insert_block(block.clone());
 	return block;
 }

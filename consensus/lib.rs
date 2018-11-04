@@ -48,7 +48,7 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 
 	//Verify tx_hash matches hash of all tx
 	let tx_hash = &block_header[34..66];
-	let all_tx_bytes = block[70..].to_vec();
+	let all_tx_bytes = block[70..].to_vec(); //we go from 66 to 70 because [66..70] is the nonce
 	if tx_hash != utils::hash_tx(all_tx_bytes.clone()) {
 		return Err(String::from("ERROR: VERIFY BLOCK: `tx_hash` does not match"));
 	}
@@ -62,13 +62,13 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 		match verify_tx(all_tx_bytes[program_counter..].to_vec(), true) { 
 			Ok(mut i) => { 
 				valid_tx_vector.append(&mut i.utxos);
-				program_counter = i.pc; 
+				program_counter += i.pc; 
 			}, 
 			Err(e) => { return Err(e); }
 		}
 	}
 
-	add_to_utxo_set();
+	add_to_utxo_set(valid_tx_vector);
 	add_coinbase_to_utxo_set(coinbase_tx_vec);
 	insert_block(block);
 	return Ok(true);
@@ -99,7 +99,7 @@ pub fn add_coinbase_to_utxo_set(coinbase_dest: Vec<u8>) {
 
 }
 
-pub fn add_to_utxo_set() {
+pub fn add_to_utxo_set(utxo_to_add: Vec<Vec<u8>>) {
 
 }
 
@@ -124,19 +124,6 @@ pub fn insert_block(block: Vec<u8>) {
     println!("LAST BLOCK HASH = {:?}", reader.get(&store, vec![1]).unwrap());
 }
 
-///Transaction format inside each block
-//version no - 4 bytes
-//input count - 1 byte
-//-(input count times)
-//--Transaction hash
-//--Output index 4 bytes
-//--unlock script size in bytes - 1 bytes
-//--unlock script 
-//-
-//output count - 6 bytes
-//-(output count times)
-//--value - 6 bytes
-//--pubkey (to address) //32 bytes
 
 //todo verify the all the transactions
 fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_values, String> {
@@ -145,12 +132,39 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 		return Err(String::from("VERIFY TX ERROR: Incompatable `version` in tx"));
 	}
 
+	let path = Path::new("./db/store");
+	let created_arc = Manager::singleton().write().unwrap().get_or_create(path, Rkv::new).unwrap();
+	let env = created_arc.read().unwrap();
+	let store: Store = env.open_or_create_default().unwrap(); 
+
+	//let mut writer = env.write().unwrap(); //create write tx
+    let reader = env.read().expect("reader");
+
 	let input_count = all_tx_bytes[2];
 	let mut sum_inputs: u64 = 0;
 	let mut s: usize = 2; //counter for position in bytecode of block
 	for i in 0..input_count {
 		let utxo_tx_hash = &all_tx_bytes[s..s+32];
 		s+=32;
+
+		let tx_ref = reader.get(&store, utxo_tx_hash).unwrap();
+		let mut tx: Vec<u8> = Vec::new();
+		match tx_ref {
+			Some(i) => {
+				match i {
+					rkv::Value::Blob(i) => { 
+						tx = i.to_vec(); if tx.len() != 38 {
+							return Err(String::from("Invalid `utxo` referenced in input"));
+						}
+					},
+					_ => { return Err(String::from("Invalid `utxo` referenced in input")); }
+				}
+			},
+			None => { return Err(String::from("Invalid `utxo` referenced in input")); }
+		}
+
+		let utxo_value = tx[2..6].to_vec();
+		let utxo_owner = tx[6..38].to_vec();
 
 		//---------------- TODO
 		//load utxo
@@ -180,7 +194,7 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 		let mut to_pub_key = all_tx_bytes[s..s+32].to_vec();
 		let mut raw_utxo: Vec<u8> = Vec::new();
 
-		raw_utxo.append(&mut !vec[0,1]);
+		raw_utxo.append(&mut [0,1].to_vec());
 		raw_utxo.append(&mut value_array.to_vec());
 		raw_utxo.append(&mut to_pub_key);
 		utxo_vector.push(raw_utxo); //vector of utxos to be returned so that we can store in utxo set if valid
