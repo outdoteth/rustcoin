@@ -36,6 +36,7 @@ fn construct_genesis() -> Vec<u8>{
 
 	//construct the block
 	let mut block: Vec<u8> = Vec::new();
+	
 	//block header
 	block.append(&mut version);
 	block.append(&mut prev_block_hash);

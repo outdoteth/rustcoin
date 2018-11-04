@@ -47,9 +47,9 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 	}
 
 	//Verify tx_hash matches hash of all tx
-	let tx_hash = &block_header[34..66];
+	let tx_hash = block_header[34..66].to_vec();
 	let all_tx_bytes = block[70..].to_vec(); //we go from 66 to 70 because [66..70] is the nonce
-	if tx_hash != utils::hash_tx(all_tx_bytes.clone()) {
+	if tx_hash != utils::hash(&all_tx_bytes) {
 		return Err(String::from("ERROR: VERIFY BLOCK: `tx_hash` does not match"));
 	}
 
@@ -230,7 +230,6 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 	};
 
 	return Ok(result); //Return the program counter inside the block
-	//need to also return utxo vectors to delete (the utxos the input references)
 }
 
 
