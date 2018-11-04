@@ -105,6 +105,7 @@ pub fn add_to_utxo_set(utxo_to_add: &mut Vec<Vec<u8>>, block_header: &mut Vec<u8
 		//hash utxo + block header
 		digest.append(&mut utxo_to_add[i]);
 		digest.append(block_header);
+		digest.push(i as u8); //index
 		let utxo_hash = utils::hash(&digest); //utxo id/utxo hash - this is what we want to write to db
 		
 		let path = Path::new("./db/store");
@@ -169,10 +170,8 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 		match tx_ref {
 			Some(i) => {
 				match i {
-					rkv::Value::Blob(i) => { 
-						tx = i.to_vec(); if tx.len() != 38 {
-							return Err(String::from("Invalid `utxo` referenced in input"));
-						}
+					rkv::Value::Blob(i) if i.to_vec().len() == 38 => { 
+						tx = i.to_vec();
 					},
 					_ => { return Err(String::from("Invalid `utxo` referenced in input")); }
 				}
