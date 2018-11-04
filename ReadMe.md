@@ -6,7 +6,8 @@
 
 ### Serialized input
 - utxo hash -- *32 bytes* <-- this is created from Sha256([utxo, blockheader])
-- signature -- *67-70 bytes*
+- sig size -- *1 byte*
+- signature<sup>sig size</sup> -- *67-70 bytes*
 
 ### Serialized transaction
 - version -- *2 bytes*
