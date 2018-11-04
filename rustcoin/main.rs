@@ -16,12 +16,14 @@ use transactions::*;
 
 fn main() {
 	//init_chain();
-	let mut s: Vec<u8> = vec![1,2,3,4];
-	println!("{:?}", s[0..1].to_vec());
+	let mut s = String::from("asdasdads");
+	init_chain(&mut s);
+	//println!("{:?}", s);
 }
 
-fn init_chain() {
-	//construct_genesis();
+fn init_chain(x: &mut String) {
+	x.push('a');
+	println!("{:?}",x );
 }
 
 

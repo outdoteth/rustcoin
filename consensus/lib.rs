@@ -91,11 +91,11 @@ pub fn add_coinbase_to_utxo_set(coinbase_dest: Vec<u8>) {
 	let store: Store = env.open_or_create_default().unwrap(); 
 
 	let mut writer = env.write().unwrap(); //create write tx
-    writer.put(&store, tx_hash.clone(),  &Value::Blob(&raw_tx)).unwrap();
-    writer.commit().unwrap();
-    let reader = env.read().expect("reader");
-    println!("TX HASH = {:?}", tx_hash.clone());
-    println!("RAW TX = {:?}", reader.get(&store, tx_hash).unwrap());
+	writer.put(&store, tx_hash.clone(),  &Value::Blob(&raw_tx)).unwrap();
+	writer.commit().unwrap();
+	let reader = env.read().expect("reader");
+	println!("TX HASH = {:?}", tx_hash.clone());
+	println!("RAW TX = {:?}", reader.get(&store, tx_hash).unwrap());
 
 }
 
@@ -105,9 +105,17 @@ pub fn add_to_utxo_set(utxo_to_add: &mut Vec<Vec<u8>>, block_header: &mut Vec<u8
 		//hash utxo + block header
 		digest.append(&mut utxo_to_add[i]);
 		digest.append(block_header);
-		utils::hash(&digest); //utxo id/utxo hash - this is what we want to write to db
-
+		let utxo_hash = utils::hash(&digest); //utxo id/utxo hash - this is what we want to write to db
 		
+		let path = Path::new("./db/store");
+		let created_arc = Manager::singleton().write().unwrap().get_or_create(path, Rkv::new).unwrap();
+		let env = created_arc.read().unwrap();
+		let store: Store = env.open_or_create_default().unwrap(); 
+
+		let mut writer = env.write().unwrap(); //create write tx
+		writer.put(&store, utxo_hash,  &Value::Blob(&utxo_to_add[i])).unwrap();
+		writer.commit().unwrap();
+
 		digest = Vec::new();
 	}
 }
