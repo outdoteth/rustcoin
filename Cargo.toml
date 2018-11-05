@@ -12,6 +12,7 @@ transactions = { path = "core/transactions" }
 consensus = { path = "consensus" }
 utils = {path = "utils"}
 chain = {path = "chain"}
+openssl = "*"
 
 [workspace]
 members = [

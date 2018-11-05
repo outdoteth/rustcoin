@@ -8,6 +8,7 @@ blocks = {path = "../blocks"}
 chain = {path = "../chain"}
 sha2 = "*"
 rkv = "*"
+openssl = "*"
 
 [lib]
 name = "utils"

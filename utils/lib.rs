@@ -2,6 +2,13 @@
 extern crate chain;
 extern crate sha2;
 extern crate rkv;
+extern crate openssl;
+
+use openssl::bn::{BigNumContext, BigNum};
+use openssl::ec::*;
+use openssl::nid::Nid;
+use openssl::pkey::PKey;
+use openssl::ecdsa::EcdsaSig;
 
 use rkv::{Manager, Rkv, Store, Value};
 use std::fs;
@@ -40,7 +47,22 @@ pub fn get_prev_block_hash() -> Vec<u8> {
 	return vec![1];
 }
 
-//gets transactions from the mempool along with their collective hash 
+//Verifies an ecdsa signature for utxo spending
+pub fn verify_signature(key: Vec<u8>, signature: Vec<u8>) {
+	//need to convert the signature into two bignums (r and s)
+
+	//Big num for context of storing keys
+	let mut ctx = BigNumContext::new().unwrap();
+	//
+	let to_compressed = PointConversionForm::COMPRESSED;
+	let group = EcGroup::from_curve_name(Nid::SECP256K1).unwrap();
+	let pubkey = EcPoint::from_bytes(&group, &key, &mut ctx);
+	//Set curve to secp256k1
+	let wrapped_pub_key = EcKey::from_public_key(&group, &pubkey.unwrap()).unwrap();
+	let sig_setup = EcdsaSig::from_private_components() //s and r
+}
+
+//gets transactions from the mempool 
 //-- This needs access to the database
 //This is used for block construction
 pub fn collect_tx_from_mempool() -> Vec<u8> {

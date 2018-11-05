@@ -53,10 +53,10 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 		return Err(String::from("ERROR: VERIFY BLOCK: `tx_hash` does not match"));
 	}
 
-	let coinbase_tx_vec = all_tx_bytes[0..32].to_vec();
+	let coinbase_tx_vec = all_tx_bytes[0..33].to_vec();
 
 	//Verify all tx (excluding coinbase)
-	let mut program_counter: usize = 32;
+	let mut program_counter: usize = 33;
 	let mut valid_tx_vector: Vec<Vec<u8>>  = Vec::new();
 	while program_counter < all_tx_bytes.len() {
 		match verify_tx(all_tx_bytes[program_counter..].to_vec(), true) { 
@@ -180,7 +180,7 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 		}
 
 		let utxo_value = tx[2..6].to_vec();
-		let utxo_owner = tx[6..38].to_vec();
+		let utxo_owner = tx[6..39].to_vec(); //compressed pubkey format means its 33 bytes (first byte being 0x02 or 0x03);
 
 		//---------------- TODO
 		//sig verify
@@ -189,6 +189,7 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 
 		//TODO: This needs to be passed into ECDSA sig verifier
 		let signature = &all_tx_bytes[s..s+sig_size];
+		utils::verify_signature(utxo_owner.to_vec(), signature.to_vec());
 		s+=sig_size;
 	}
 
@@ -210,14 +211,14 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 			return Err(String::from("Sum of outputs exceeds the inputs"));
 		}
 
-		let mut to_pub_key = all_tx_bytes[s..s+32].to_vec();
+		let mut to_pub_key = all_tx_bytes[s..s+33].to_vec();
 		let mut raw_utxo: Vec<u8> = Vec::new();
 
 		raw_utxo.append(&mut [0,1].to_vec());
 		raw_utxo.append(&mut value_array.to_vec());
 		raw_utxo.append(&mut to_pub_key);
 		utxo_vector.push(raw_utxo); //vector of utxos to be returned so that we can store in utxo set if valid
-		s+=32; 
+		s+=33; 
 	}
 
 	if !is_Block {
