@@ -15,8 +15,7 @@ pub struct Input {
 	pub tx_hash: [u8; 32], //Refers to utxo
 	pub index: [u8; 2],
 	pub from_pub_key: [u8; 32],
-	pub signature: [u8; 32],
-	pub unlockScript: [u8; 32] //PUSH <signature> PUSH <from_pub_key>
+	pub signature: [u8; 9]
 }
 
 ///Transaction format inside each block
@@ -39,7 +38,7 @@ pub struct Input {
 //No need to overcomplicate things
 impl Transaction {
 	pub fn serialize(&self) {
-
+		
 	}
 
 	/*pub fn serialize_tx(TX: Transaction) -> Result<Vec<u8>, String> {

@@ -19,6 +19,7 @@ members = [
 	"core/transactions",
 	"core/rvm",
 	"blocks",
+	"wallet",
 	"rustcoin"
 ]
 
