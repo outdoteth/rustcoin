@@ -9,6 +9,7 @@ use openssl::ec::*;
 use openssl::nid::Nid;
 use openssl::pkey::PKey;
 use openssl::ecdsa::EcdsaSig;
+use openssl::error::ErrorStack;
 
 use rkv::{Manager, Rkv, Store, Value};
 use std::fs;
@@ -48,18 +49,33 @@ pub fn get_prev_block_hash() -> Vec<u8> {
 }
 
 //Verifies an ecdsa signature for utxo spending
-pub fn verify_signature(key: Vec<u8>, signature: Vec<u8>) {
+pub fn verify_signature(key: Vec<u8>, signature: Vec<u8>, utxo: Vec<u8>) -> Result<bool, ErrorStack>{
 	//need to convert the signature into two bignums (r and s)
+	//get the size of r and then r itself
+	//then convert to bignum
+	let r_size = signature[0] as usize;
+	let r = &signature[1..r_size];
+	let r_bignum = BigNum::from_slice(r)?;
 
-	//Big num for context of storing keys
-	let mut ctx = BigNumContext::new().unwrap();
-	//
-	let to_compressed = PointConversionForm::COMPRESSED;
-	let group = EcGroup::from_curve_name(Nid::SECP256K1).unwrap();
-	let pubkey = EcPoint::from_bytes(&group, &key, &mut ctx);
-	//Set curve to secp256k1
-	let wrapped_pub_key = EcKey::from_public_key(&group, &pubkey.unwrap()).unwrap();
-	let sig_setup = EcdsaSig::from_private_components() //s and r
+	//get size of s and then s itself
+	//then convert to bignum
+	let s_size = signature[r_size] as usize;
+	let s = &signature[r_size+1..s_size];
+	let s_bignum = BigNum::from_slice(s)?;
+
+	let mut ctx = BigNumContext::new()?; //Big num for context of storing keys
+	let to_compressed = PointConversionForm::COMPRESSED; //Type of pub key
+	let group = EcGroup::from_curve_name(Nid::SECP256K1)?; //All operations are done on secp256k1 curve
+	let pubkey = EcPoint::from_bytes(&group, &key, &mut ctx)?; //Get a key and convert to EcPoint
+	let wrapped_pub_key = EcKey::from_public_key(&group, &pubkey)?; //Wrap pubkey to EcKey type
+	let sig_setup = EcdsaSig::from_private_components(r_bignum, s_bignum)?; //Merge r and s into Ecdsa sig type
+
+	//Final check to make sure signature is valid
+	let is_valid_signature = sig_setup.verify(&utxo, &wrapped_pub_key)?;
+	if is_valid_signature {
+		return Ok(true);
+	}
+	return Ok(false);
 }
 
 //gets transactions from the mempool 

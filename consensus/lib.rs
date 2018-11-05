@@ -10,6 +10,7 @@ extern crate rkv;
 extern crate sha2;
 extern crate db;
 
+
 use sha2::{Sha256, Digest};
 
 use rkv::{Manager, Rkv, Store, Value};
@@ -189,7 +190,7 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 
 		//TODO: This needs to be passed into ECDSA sig verifier
 		let signature = &all_tx_bytes[s..s+sig_size];
-		utils::verify_signature(utxo_owner.to_vec(), signature.to_vec());
+		utils::verify_signature(utxo_owner.to_vec(), signature.to_vec(), utxo_tx_hash.to_vec());
 		s+=sig_size;
 	}
 
