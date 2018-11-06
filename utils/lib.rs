@@ -20,14 +20,15 @@ use sha2::{Sha256, Digest}; //This algo should be changed to something asic resi
 pub fn get_block_template() -> Vec<u8> {
 	let mut prev_block_hash = get_prev_block_hash();
 	//let mut all_tx_hash = collect_tx_from_mempool(); //TODO: Collect tx from mempool
-	//let mut tx_hash = hash(&all_tx_hash);
+	let mut coinbase_dest = vec![174, 132, 79, 187, 95, 178, 106, 70, 36, 139, 40, 103, 211, 176, 170, 144, 146, 226, 231, 133, 235, 189, 235, 173, 255, 86, 229, 100, 141, 70, 196, 241];
+	let mut tx_hash = hash(&coinbase_dest); //just for testing this needs to be changed
 	let mut nonce = vec![0,0,0,0];
 
 	let mut block_template: Vec<u8> = Vec::new(); //70 byte vector for block header
-	block_template[0] = 0; // -- version
-	block_template[1] = 1; // -- version
+	block_template.push(0);// -- version
+	block_template.push(1); // -- version
 	block_template.append(&mut prev_block_hash);
-	//block_template.append(&mut all_tx_hash); //TODO: Collect tx from mempool
+	block_template.append(&mut tx_hash); //TODO: Collect tx from mempool
 	block_template.append(&mut nonce);
 	return block_template; //this is just a block header
 }
@@ -72,10 +73,7 @@ pub fn verify_signature(key: Vec<u8>, signature: Vec<u8>, utxo: Vec<u8>) -> Resu
 
 	//Final check to make sure signature is valid
 	let is_valid_signature = sig_setup.verify(&utxo, &wrapped_pub_key)?;
-	if is_valid_signature {
-		return Ok(true);
-	}
-	return Ok(false);
+	return Ok(is_valid_signature);
 }
 
 //gets transactions from the mempool 
@@ -99,8 +97,5 @@ pub fn hash_satisfies_difficulty(block: &Vec<u8>) -> bool {
 	hasher.input(block);
 	let result = hasher.result();
 	//TODO: `[255;32]` needs to be changed to chain::CHAIN_PARAMS::DIFFICULTY
-	if result.as_slice() < &[255;32] {
-		return true;
-	}
-	return false;
+	return result.as_slice() < &[255;32];
 }

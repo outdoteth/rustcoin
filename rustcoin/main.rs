@@ -1,14 +1,15 @@
 
 extern crate consensus;
+extern crate wallet;
 
 fn main() {
-
+	init_chain();
+	wallet::mine();
 }
 
 
-fn init_chain(x: &mut String) {
-	x.push('a');
-	println!("{:?}",x );
+fn init_chain() {
+	construct_genesis();
 }
 
 fn construct_genesis() -> Vec<u8>{

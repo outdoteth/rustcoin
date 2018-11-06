@@ -49,6 +49,7 @@ dependencies = [
  "transactions 0.1.0",
  "utils 0.1.0",
  "vm 0.1.0",
+ "wallet 0.1.0",
 ]
 
 [[package]]
@@ -474,6 +475,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "vm"
 version = "0.1.0"
+
+[[package]]
+name = "wallet"
+version = "0.1.0"
+dependencies = [
+ "consensus 0.1.0",
+ "utils 0.1.0",
+]
 
 [[package]]
 name = "winapi"

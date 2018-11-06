@@ -27,6 +27,7 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 	if block.len() > 1_000_000 {
 		return Err(String::from("ERROR: VERIFY BLOCK: `block` is too large"));
 	}
+
 	let mut block_header: [u8; 70] = [0; 70];
 	block_header.copy_from_slice(&block[0..70]); //Get blockheader into array
 	let version = &block_header[0..2];
@@ -54,7 +55,7 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 		return Err(String::from("ERROR: VERIFY BLOCK: `tx_hash` does not match"));
 	}
 
-	let coinbase_tx_vec = all_tx_bytes[0..33].to_vec();
+	let coinbase_tx_vec = all_tx_bytes[0..32].to_vec();
 
 	//Verify all tx (excluding coinbase)
 	let mut program_counter: usize = 33;
@@ -97,7 +98,6 @@ pub fn add_coinbase_to_utxo_set(coinbase_dest: Vec<u8>) {
 	let reader = env.read().expect("reader");
 	println!("TX HASH = {:?}", tx_hash.clone());
 	println!("RAW TX = {:?}", reader.get(&store, tx_hash).unwrap());
-
 }
 
 pub fn add_to_utxo_set(utxo_to_add: &mut Vec<Vec<u8>>, block_header: &mut Vec<u8>) {
@@ -138,9 +138,9 @@ pub fn insert_block(block: Vec<u8>) {
 	writer.commit().unwrap();
 
 	let reader = env.read().expect("reader");
+	println!("LAST BLOCK HASH = {:?}", reader.get(&store, vec![1]).unwrap());
 	println!("BLOCK HASH = {:?}", block_hash.clone());
 	println!("BLOCK = {:?}", reader.get(&store, block_hash).unwrap());
-	println!("LAST BLOCK HASH = {:?}", reader.get(&store, vec![1]).unwrap());
 }
 
 
@@ -156,7 +156,7 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 	let env = created_arc.read().unwrap();
 	let store: Store = env.open_or_create_default().unwrap(); 
 
-	//let mut writer = env.write().unwrap(); //create write tx
+	let mut writer = env.write().unwrap(); //create write tx
     let reader = env.read().expect("reader");
 
 	let input_count = all_tx_bytes[2];
@@ -222,8 +222,19 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 		s+=33; 
 	}
 
+	//If the tx is not inside a block send it to the mempool
 	if !is_Block {
-		//write utxo to mempool
+		//key for referencing the tx pool vec![1,2]
+		//each tx in the mempool will be stored here
+		//first we need to read then reinsert the read value
+		let mut current_mempool = reader.get(&store, &vec![1,2]).unwrap().unwrap().to_bytes().unwrap();
+		//edit the current mempool and insert the utxos that have been verified
+		for i in 0..utxo_vector.len() {
+			current_mempool.append(&mut utxo_vector[i]);
+		}
+		//create write of new mempool to key value vec![1,2]
+		writer.put(&store, vec![1,2],  &Value::Blob(&current_mempool)).unwrap();
+		writer.commit().unwrap();
 	}
 
 	let result = verify_tx_return_values {
@@ -231,7 +242,7 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 		utxos: utxo_vector
 	};
 
-	return Ok(result); //Return the program counter inside the block
+	return Ok(result); //Return the program counter inside the block + the utxos to write to the chain
 }
 
 

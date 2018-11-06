@@ -13,6 +13,7 @@ consensus = { path = "consensus" }
 utils = {path = "utils"}
 chain = {path = "chain"}
 openssl = "*"
+wallet = {path = "wallet"}
 
 [workspace]
 members = [
