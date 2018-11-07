@@ -55,7 +55,7 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 		return Err(String::from("ERROR: VERIFY BLOCK: `tx_hash` does not match"));
 	}
 
-	let coinbase_tx_vec = all_tx_bytes[0..32].to_vec();
+	let coinbase_tx_vec = all_tx_bytes[0..33].to_vec();
 
 	//Verify all tx (excluding coinbase)
 	let mut program_counter: usize = 33;
@@ -76,6 +76,7 @@ pub fn verify_new_block(block: Vec<u8>) -> Result<bool, String> {
 	return Ok(true);
 }
 
+//writes the coinbase tx into the utxo set
 pub fn add_coinbase_to_utxo_set(coinbase_dest: Vec<u8>) {
 	let mut version: Vec<u8> = vec![0,1];
 	let mut to_dest: Vec<u8> = coinbase_dest;
@@ -95,11 +96,10 @@ pub fn add_coinbase_to_utxo_set(coinbase_dest: Vec<u8>) {
 	let mut writer = env.write().unwrap(); //create write tx
 	writer.put(&store, tx_hash.clone(),  &Value::Blob(&raw_tx)).unwrap();
 	writer.commit().unwrap();
-	let reader = env.read().expect("reader");
-	println!("TX HASH = {:?}", tx_hash.clone());
-	println!("RAW TX = {:?}", reader.get(&store, tx_hash).unwrap());
 }
 
+//writes a standard tx into the utxo set after it has been verified in a block
+//key value = hash(utxo, blockheader, index in block)
 pub fn add_to_utxo_set(utxo_to_add: &mut Vec<Vec<u8>>, block_header: &mut Vec<u8>) {
 	let mut digest: Vec<u8> = Vec::new();
 	for i in 0..utxo_to_add.len() {
@@ -122,6 +122,8 @@ pub fn add_to_utxo_set(utxo_to_add: &mut Vec<Vec<u8>>, block_header: &mut Vec<u8
 	}
 }
 
+//insert block into db after it has been verified
+//key value = hash(blockhash)
 pub fn insert_block(block: Vec<u8>) {
 	let path = Path::new("./db/store");
 	let created_arc = Manager::singleton().write().unwrap().get_or_create(path, Rkv::new).unwrap();
@@ -136,15 +138,10 @@ pub fn insert_block(block: Vec<u8>) {
 	//store the last block hash - key is vec![1]
 	writer.put(&store, vec![1],  &Value::Blob(&block_hash.clone())).unwrap();
 	writer.commit().unwrap();
-
-	let reader = env.read().expect("reader");
-	println!("LAST BLOCK HASH = {:?}", reader.get(&store, vec![1]).unwrap());
-	println!("BLOCK HASH = {:?}", block_hash.clone());
-	println!("BLOCK = {:?}", reader.get(&store, block_hash).unwrap());
 }
 
 
-//todo verify the all the transactions
+//verifies a raw tx
 fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_values, String> {
 	let version = &all_tx_bytes[0..2]; //needs to be changed to counter
 	if version != [0,1] { //this needs to be changed to 2 bytes
@@ -166,13 +163,19 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 		let utxo_tx_hash = &all_tx_bytes[s..s+32];
 		s+=32;
 
-		let tx_ref = reader.get(&store, utxo_tx_hash).unwrap();
-		let mut tx: Vec<u8> = Vec::new();
-		match tx_ref {
+		//read the utxo from the db
+		let utxo_ref = reader.get(&store, utxo_tx_hash).unwrap();
+		//where the utxo will be stored
+		let mut utxo: Vec<u8> = Vec::new();
+		match utxo_ref {
 			Some(i) => {
 				match i {
-					rkv::Value::Blob(i) if i.to_vec().len() == 38 => { 
-						tx = i.to_vec();
+					//check if utxo is 39 bytes long
+					//2 byte version
+					//4 byte value
+					//33 byte compressed pubkey
+					rkv::Value::Blob(i) if i.to_vec().len() == 39 => {
+						utxo = i.to_vec();
 					},
 					_ => { return Err(String::from("Invalid `utxo` referenced in input")); }
 				}
@@ -180,16 +183,19 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 			None => { return Err(String::from("Invalid `utxo` referenced in input")); }
 		}
 
-		let utxo_value = tx[2..6].to_vec();
-		let utxo_owner = tx[6..39].to_vec(); //compressed pubkey format means its 33 bytes (first byte being 0x02 or 0x03);
+		//seperate the owner(33 byte pubkey) from the value
+		let utxo_value = utxo[2..6].to_vec();
+		let utxo_owner = utxo[6..39].to_vec(); //compressed pubkey format means its 33 bytes (first byte being 0x02 or 0x03);
 
-		//---------------- TODO
-		//sig verify
+		//signautre size (this will either be 67-69 bytes)
 		let sig_size = all_tx_bytes[s..s+1].to_vec()[0] as usize;
 		s+=1;
 
-		//TODO: This needs to be passed into ECDSA sig verifier
+		//get the signature
 		let signature = &all_tx_bytes[s..s+sig_size];
+
+		//verify the signature is a valid ecdsa
+		//TODO: Can be changed to EdCSA?
 		utils::verify_signature(utxo_owner.to_vec(), signature.to_vec(), utxo_tx_hash.to_vec());
 		s+=sig_size;
 	}
@@ -227,7 +233,10 @@ fn verify_tx(all_tx_bytes: Vec<u8>, is_Block: bool) -> Result<verify_tx_return_v
 		//key for referencing the tx pool vec![1,2]
 		//each tx in the mempool will be stored here
 		//first we need to read then reinsert the read value
-		let mut current_mempool = reader.get(&store, &vec![1,2]).unwrap().unwrap().to_bytes().unwrap();
+		let mut current_mempool = match reader.get(&store, &vec![1,2]).unwrap().unwrap() {
+			Value::Blob(i) => i.to_vec(),
+			_ => { return Err(String::from("ERROR VERIFY TX: Invalid mempool values")) }
+		}; //this needs to be changed to if let
 		//edit the current mempool and insert the utxos that have been verified
 		for i in 0..utxo_vector.len() {
 			current_mempool.append(&mut utxo_vector[i]);

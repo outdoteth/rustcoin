@@ -38,4 +38,6 @@ fn construct_genesis() -> Vec<u8>{
 //TODO:
 // - Miner
 // - tx mempool
+// - serialize tx
+// - merkle tree
 // - networking

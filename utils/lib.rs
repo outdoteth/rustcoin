@@ -17,10 +17,13 @@ use std::path::Path;
 use sha2::{Sha256, Digest}; //This algo should be changed to something asic resistant
 
 //Template header for mining
-pub fn get_block_template() -> Vec<u8> {
+pub fn get_block_template() -> Result<Vec<u8>, String> {
 	let mut prev_block_hash = get_prev_block_hash();
-	//let mut all_tx_hash = collect_tx_from_mempool(); //TODO: Collect tx from mempool
+	let mut tx_in_mempool = collect_tx_from_mempool()?; //TODO: Collect tx from mempool
 	let mut coinbase_dest = vec![174, 132, 79, 187, 95, 178, 106, 70, 36, 139, 40, 103, 211, 176, 170, 144, 146, 226, 231, 133, 235, 189, 235, 173, 255, 86, 229, 100, 141, 70, 196, 241];
+	let mut digest: Vec<u8> = Vec::new();
+	digest.append(&mut coinbase_dest);
+	digest.append(&mut tx_in_mempool);
 	let mut tx_hash = hash(&coinbase_dest); //just for testing this needs to be changed
 	let mut nonce = vec![0,0,0,0];
 
@@ -30,7 +33,7 @@ pub fn get_block_template() -> Vec<u8> {
 	block_template.append(&mut prev_block_hash);
 	block_template.append(&mut tx_hash); //TODO: Collect tx from mempool
 	block_template.append(&mut nonce);
-	return block_template; //this is just a block header
+	return Ok(block_template); //this is just a block header
 }
 
 //Fetch last block hash 
@@ -50,7 +53,7 @@ pub fn get_prev_block_hash() -> Vec<u8> {
 }
 
 //Verifies an ecdsa signature for utxo spending
-pub fn verify_signature(key: Vec<u8>, signature: Vec<u8>, utxo: Vec<u8>) -> Result<bool, ErrorStack>{
+pub fn verify_signature(key: Vec<u8>, signature: Vec<u8>, message: Vec<u8>) -> Result<bool, ErrorStack>{
 	//need to convert the signature into two bignums (r and s)
 	//get the size of r and then r itself
 	//then convert to bignum
@@ -72,15 +75,24 @@ pub fn verify_signature(key: Vec<u8>, signature: Vec<u8>, utxo: Vec<u8>) -> Resu
 	let sig_setup = EcdsaSig::from_private_components(r_bignum, s_bignum)?; //Merge r and s into Ecdsa sig type
 
 	//Final check to make sure signature is valid
-	let is_valid_signature = sig_setup.verify(&utxo, &wrapped_pub_key)?;
+	let is_valid_signature = sig_setup.verify(&message, &wrapped_pub_key)?;
 	return Ok(is_valid_signature);
 }
 
 //gets transactions from the mempool 
 //-- This needs access to the database
 //This is used for block construction
-pub fn collect_tx_from_mempool() -> Vec<u8> {
-	Vec::new()
+pub fn collect_tx_from_mempool() ->Result<Vec<u8>, String> {
+	let path = Path::new("./db/store");
+	let created_arc = Manager::singleton().write().unwrap().get_or_create(path, Rkv::new).unwrap();
+	let env = created_arc.read().unwrap();
+	let store: Store = env.open_or_create_default().unwrap(); 
+	let reader = env.read().expect("reader");
+	let tx_vec = match reader.get(&store, vec![1,2]).unwrap().unwrap() {
+		Value::Blob(i) => i.to_vec(),
+		_ => { return Err(String::from("ERROR: UTILS: No tx in mempool")); }
+	};
+	return Ok(tx_vec);
 }
 
 //Simple sha256 hash handler
