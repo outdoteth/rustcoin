@@ -1,10 +1,20 @@
-
 extern crate consensus;
 extern crate wallet;
 
+extern crate rand;
+use rand::thread_rng;
+
+extern crate curve25519_dalek;
+use curve25519_dalek::scalar::Scalar;
+
+extern crate merlin;
+use merlin::Transcript;
+
+extern crate bulletproofs;
+use bulletproofs::{BulletproofGens, PedersenGens, RangeProof};
+
 fn main() {
-	init_chain();
-	wallet::mine();
+	
 }
 
 
@@ -34,6 +44,7 @@ fn construct_genesis() -> Vec<u8>{
 	consensus::insert_block(block.clone());
 	return block;
 }
+
 
 //TODO:
 // - Miner
