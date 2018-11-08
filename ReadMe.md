@@ -1,7 +1,7 @@
 # Structures
 
 *TODO:*
-- *Transactions changed to only include utxo offset instead of whole hash*
+- *utxo changed to only include utxo offset instead of whole hash*
 - *Transaction needs only one signature instead of signing each utxo input*
 - *networking*
 - *change pow algo from sha256 to something more asic resistant. (Maybe Nerva's algo?)*
