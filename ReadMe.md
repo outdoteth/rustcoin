@@ -5,6 +5,9 @@
 - *Transaction needs only one signature instead of signing each utxo input*
 - *networking*
 - *change pow algo from sha256 to something more asic resistant. (Maybe Nerva's algo?)*
+- *can improve on security and memory O(n) -> O(1) by switching to Schnorr (so we can batch signatures in each tx since sum(sig) verifies on sum(keys))*  
+
+Utxo based cryptocurrency using sha256 hashing algorithm and ecdsa signing on secp256k1 elliptic curve
 
 ### Serialized output/utxo
 - version -- *2 bytes*
